@@ -68,8 +68,6 @@ if(WIN32 OR (CMAKE_SYSTEM_NAME MATCHES "MINGW"))
 	add_definitions(-D__USE_MINGW_ANSI_STDIO)
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")
-
 if(CMAKE_SYSTEM_NAME MATCHES "HP-UX")
 	if(CMAKE_C_COMPILER MATCHES "gcc")
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -fno-strict-aliasing")
@@ -155,7 +153,7 @@ if(MSVC)
 	string(REPLACE "C" " -wd" MSVC_DISABLED_WARNINGS_STR
 		${MSVC_DISABLED_WARNINGS_LIST})
 	string(REGEX REPLACE "[/-]W[1234][ ]?" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -MP -W4 ${MSVC_DISABLED_WARNINGS_STR}")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -MP /w")
 endif()
 
 check_function_exists(asprintf HAVE_ASPRINTF)

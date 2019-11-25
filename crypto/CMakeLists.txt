@@ -968,7 +968,10 @@ if(EXTRA_EXPORT)
 endif()
 
 add_library(crypto ${CRYPTO_SRC})
-target_include_directories(crypto
+if (MSVC)
+	target_compile_options(crypto PRIVATE /W0 /Qspectre)
+endif()
+target_include_directories(crypto SYSTEM
 	PRIVATE
 		.
 		asn1
