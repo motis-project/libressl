@@ -19,7 +19,7 @@ if(HOST_ASM_ELF_ARMV4)
 	add_definitions(-DSHA256_ASM)
 	add_definitions(-DSHA512_ASM)
 	add_definitions(-DOPENSSL_CPUID_OBJ)
-	set_property(SOURCE ${ASM_ARMV4_ELF_SRC} PROPERTY LANGUAGE C)
+	set_property(SOURCE ${ASM_ARMV4_ELF_SRC} PROPERTY LANGUAGE ASM)
 	set(CRYPTO_SRC ${CRYPTO_SRC} ${ASM_ARMV4_ELF_SRC})
 endif()
 
@@ -62,7 +62,7 @@ if(HOST_ASM_ELF_X86_64)
 	add_definitions(-DWHIRLPOOL_ASM)
 	add_definitions(-DOPENSSL_CPUID_OBJ)
 	set(CRYPTO_SRC ${CRYPTO_SRC} ${ASM_X86_64_ELF_SRC})
-	set_property(SOURCE ${ASM_X86_64_ELF_SRC} PROPERTY LANGUAGE C)
+	set_property(SOURCE ${ASM_X86_64_ELF_SRC} PROPERTY LANGUAGE ASM)
 endif()
 
 if(HOST_ASM_MACOSX_X86_64)
@@ -104,7 +104,7 @@ if(HOST_ASM_MACOSX_X86_64)
 	add_definitions(-DWHIRLPOOL_ASM)
 	add_definitions(-DOPENSSL_CPUID_OBJ)
 	set(CRYPTO_SRC ${CRYPTO_SRC} ${ASM_X86_64_MACOSX_SRC})
-	set_property(SOURCE ${ASM_X86_64_MACOSX_SRC} PROPERTY LANGUAGE C)
+	set_property(SOURCE ${ASM_X86_64_MACOSX_SRC} PROPERTY LANGUAGE ASM)
 	set_property(SOURCE ${ASM_X86_64_MACOSX_SRC} PROPERTY XCODE_EXPLICIT_FILE_TYPE "sourcecode.asm")
 endif()
 
@@ -189,7 +189,7 @@ if(HOST_ASM_MINGW64_X86_64)
 	add_definitions(-DWHIRLPOOL_ASM)
 	add_definitions(-DOPENSSL_CPUID_OBJ)
 	set(CRYPTO_SRC ${CRYPTO_SRC} ${ASM_X86_64_MINGW64_SRC})
-	set_property(SOURCE ${ASM_X86_64_MINGW64_SRC} PROPERTY LANGUAGE C)
+	set_property(SOURCE ${ASM_X86_64_MINGW64_SRC} PROPERTY LANGUAGE ASM)
 endif()
 
 if((NOT HOST_ASM_ELF_X86_64) AND
@@ -394,7 +394,6 @@ set(
 	cms/cms_ess.c
 	cms/cms_io.c
 	cms/cms_kari.c
-	cms/cms_lcl.h
 	cms/cms_lib.c
 	cms/cms_pwri.c
 	cms/cms_sd.c
@@ -721,20 +720,56 @@ set(
 	x509/by_dir.c
 	x509/by_file.c
 	x509/by_mem.c
+	x509/pcy_cache.c
+	x509/pcy_data.c
+	x509/pcy_lib.c
+	x509/pcy_map.c
+	x509/pcy_node.c
+	x509/pcy_tree.c
+	x509/x509_akey.c
+	x509/x509_akeya.c
+	x509/x509_alt.c
 	x509/x509_att.c
+	x509/x509_bcons.c
+	x509/x509_bitst.c
 	x509/x509_cmp.c
+	x509/x509_conf.c
+	x509/x509_constraints.c
+	x509/x509_cpols.c
+	x509/x509_crld.c
 	x509/x509_d2.c
 	x509/x509_def.c
+	x509/x509_enum.c
 	x509/x509_err.c
 	x509/x509_ext.c
+	x509/x509_extku.c
+	x509/x509_genn.c
+	x509/x509_ia5.c
+	x509/x509_info.c
+	x509/x509_int.c
+	x509/x509_issuer_cache.c
+	x509/x509_lib.c
 	x509/x509_lu.c
+	x509/x509_ncons.c
 	x509/x509_obj.c
+	x509/x509_ocsp.c
+	x509/x509_pci.c
+	x509/x509_pcia.c
+	x509/x509_pcons.c
+	x509/x509_pku.c
+	x509/x509_pmaps.c
+	x509/x509_prn.c
+	x509/x509_purp.c
 	x509/x509_r2x.c
 	x509/x509_req.c
 	x509/x509_set.c
+	x509/x509_skey.c
+	x509/x509_sxnet.c
 	x509/x509_trs.c
 	x509/x509_txt.c
+	x509/x509_utl.c
 	x509/x509_v3.c
+	x509/x509_verify.c
 	x509/x509_vfy.c
 	x509/x509_vpm.c
 	x509/x509cset.c
@@ -743,40 +778,6 @@ set(
 	x509/x509spki.c
 	x509/x509type.c
 	x509/x_all.c
-	x509v3/pcy_cache.c
-	x509v3/pcy_data.c
-	x509v3/pcy_lib.c
-	x509v3/pcy_map.c
-	x509v3/pcy_node.c
-	x509v3/pcy_tree.c
-	x509v3/v3_akey.c
-	x509v3/v3_akeya.c
-	x509v3/v3_alt.c
-	x509v3/v3_bcons.c
-	x509v3/v3_bitst.c
-	x509v3/v3_conf.c
-	x509v3/v3_cpols.c
-	x509v3/v3_crld.c
-	x509v3/v3_enum.c
-	x509v3/v3_extku.c
-	x509v3/v3_genn.c
-	x509v3/v3_ia5.c
-	x509v3/v3_info.c
-	x509v3/v3_int.c
-	x509v3/v3_lib.c
-	x509v3/v3_ncons.c
-	x509v3/v3_ocsp.c
-	x509v3/v3_pci.c
-	x509v3/v3_pcia.c
-	x509v3/v3_pcons.c
-	x509v3/v3_pku.c
-	x509v3/v3_pmaps.c
-	x509v3/v3_prn.c
-	x509v3/v3_purp.c
-	x509v3/v3_skey.c
-	x509v3/v3_sxnet.c
-	x509v3/v3_utl.c
-	x509v3/v3err.c
 )
 
 if(UNIX)
@@ -808,7 +809,6 @@ if(WIN32)
 	set(EXTRA_EXPORT ${EXTRA_EXPORT} posix_write)
 	set(EXTRA_EXPORT ${EXTRA_EXPORT} posix_getsockopt)
 	set(EXTRA_EXPORT ${EXTRA_EXPORT} posix_setsockopt)
-	set(EXTRA_EXPORT ${EXTRA_EXPORT} sleep)
 endif()
 
 if(NOT HAVE_ASPRINTF)
@@ -937,7 +937,8 @@ if(NOT ENABLE_ASM)
 	add_definitions(-DOPENSSL_NO_ASM)
 else()
 	if(MSVC)
-		if(NOT "${CMAKE_GENERATOR}" MATCHES "Win64")
+		if((NOT "${CMAKE_GENERATOR}" MATCHES "Win64") AND
+		   (NOT "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "x64"))
 			add_definitions(-DOPENSSL_NO_ASM)
 		endif()
 	elseif(WIN32)
