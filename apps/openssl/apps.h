@@ -1,4 +1,4 @@
-/* $OpenBSD: apps.h,v 1.24 2020/09/09 12:47:46 inoguchi Exp $ */
+/* $OpenBSD: apps.h,v 1.28 2021/09/02 11:30:15 inoguchi Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -207,6 +207,7 @@ int unpack_revinfo(ASN1_TIME **prevtm, int *preason, ASN1_OBJECT **phold,
 #define DB_TYPE_REV	'R'
 #define DB_TYPE_EXP	'E'
 #define DB_TYPE_VAL	'V'
+#define DB_TYPE_SUSP	'S'
 
 typedef struct db_attr_st {
 	int unique_subject;
@@ -304,6 +305,7 @@ struct option {
 		OPTION_VALUE_AND,
 		OPTION_VALUE_OR,
 		OPTION_UL_VALUE_OR,
+		OPTION_ORDER,
 	} type;
 	union {
 		char **arg;
@@ -315,9 +317,11 @@ struct option {
 		int *value;
 		unsigned long *ulvalue;
 		time_t *tvalue;
+		int *order;
 	} opt;
 	const int value;
 	const unsigned long ulvalue;
+	int *order;
 };
 
 void options_usage(const struct option *opts);

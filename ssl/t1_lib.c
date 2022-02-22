@@ -1,4 +1,4 @@
-/* $OpenBSD: t1_lib.c,v 1.178 2020/10/11 12:45:52 guenther Exp $ */
+/* $OpenBSD: t1_lib.c,v 1.182 2021/07/01 17:53:39 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -116,9 +116,8 @@
 #include <openssl/objects.h>
 #include <openssl/ocsp.h>
 
-#include "ssl_locl.h"
-
 #include "bytestring.h"
+#include "ssl_locl.h"
 #include "ssl_sigalgs.h"
 #include "ssl_tlsext.h"
 
@@ -130,7 +129,7 @@ tls1_new(SSL *s)
 {
 	if (!ssl3_new(s))
 		return (0);
-	s->method->internal->ssl_clear(s);
+	s->method->ssl_clear(s);
 	return (1);
 }
 
@@ -148,10 +147,10 @@ void
 tls1_clear(SSL *s)
 {
 	ssl3_clear(s);
-	s->version = s->method->internal->version;
+	s->version = s->method->version;
 }
 
-static int nid_list[] = {
+static const int nid_list[] = {
 	NID_sect163k1,		/* sect163k1 (1) */
 	NID_sect163r1,		/* sect163r1 (2) */
 	NID_sect163r2,		/* sect163r2 (3) */
@@ -669,7 +668,7 @@ ssl_check_clienthello_tlsext_late(SSL *s)
 	} else
 		s->internal->tlsext_status_expected = 0;
 
-err:
+ err:
 	switch (ret) {
 	case SSL_TLSEXT_ERR_ALERT_FATAL:
 		ssl3_send_alert(s, SSL3_AL_FATAL, al);
