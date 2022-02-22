@@ -1,6 +1,10 @@
 include $(top_srcdir)/Makefile.am.common
 
+if ENABLE_LIBTLS_ONLY
+noinst_LTLIBRARIES = libssl.la
+else
 lib_LTLIBRARIES = libssl.la
+endif
 
 EXTRA_DIST = VERSION
 EXTRA_DIST += CMakeLists.txt
@@ -54,6 +58,9 @@ libssl_la_SOURCES += ssl_txt.c
 libssl_la_SOURCES += ssl_versions.c
 libssl_la_SOURCES += t1_enc.c
 libssl_la_SOURCES += t1_lib.c
+libssl_la_SOURCES += tls_content.c
+libssl_la_SOURCES += tls12_key_schedule.c
+libssl_la_SOURCES += tls12_lib.c
 libssl_la_SOURCES += tls12_record_layer.c
 libssl_la_SOURCES += tls13_buffer.c
 libssl_la_SOURCES += tls13_client.c
@@ -70,9 +77,11 @@ libssl_la_SOURCES += tls13_server.c
 
 noinst_HEADERS = bytestring.h
 noinst_HEADERS += srtp.h
+noinst_HEADERS += dtls_locl.h
 noinst_HEADERS += ssl_locl.h
 noinst_HEADERS += ssl_sigalgs.h
 noinst_HEADERS += ssl_tlsext.h
+noinst_HEADERS += tls_content.h
 noinst_HEADERS += tls13_internal.h
 noinst_HEADERS += tls13_handshake.h
 noinst_HEADERS += tls13_record.h
