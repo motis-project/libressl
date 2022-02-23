@@ -1,4 +1,4 @@
-/* $OpenBSD: ocspcheck.c,v 1.28 2020/10/16 01:16:55 beck Exp $ */
+/* $OpenBSD: ocspcheck.c,v 1.30 2021/07/12 15:09:21 beck Exp $ */
 
 /*
  * Copyright (c) 2017,2020 Bob Beck <beck@openbsd.org>
@@ -113,7 +113,6 @@ host_dns(const char *s, struct addr vec[MAX_SERVERS_DNS])
 
 		dspew("DNS returns %s for %s\n", vec[vecsz].ip, s);
 		vecsz++;
-		break;
 	}
 
 	freeaddrinfo(res0);
@@ -618,14 +617,14 @@ main(int argc, char **argv)
 
 	if (cafile != NULL) {
 		if (unveil(cafile, "r") == -1)
-			err(1, "unveil");
+			err(1, "unveil %s", cafile);
 	}
 	if (cadir != NULL) {
 		if (unveil(cadir, "r") == -1)
-			err(1, "unveil");
+			err(1, "unveil %s", cadir);
 	}
 	if (unveil(certfile, "r") == -1)
-		err(1, "unveil");
+		err(1, "unveil %s", certfile);
 
 	if (pledge("stdio inet rpath dns", NULL) == -1)
 		err(1, "pledge");

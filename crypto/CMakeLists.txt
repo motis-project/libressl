@@ -968,7 +968,25 @@ if(EXTRA_EXPORT)
 	endforeach()
 endif()
 
-add_library(crypto ${CRYPTO_SRC})
+set(LIBTLS_EXTRA_EXPORT ${EXTRA_EXPORT} PARENT_SCOPE)
+
+add_library(crypto_obj OBJECT ${CRYPTO_SRC})
+target_include_directories(crypto_obj
+	PRIVATE
+		.
+		asn1
+		bn
+		dsa
+		ec
+		ecdh
+		ecdsa
+		evp
+		modes
+		../include/compat
+	PUBLIC
+		../include)
+
+add_library(crypto $<TARGET_OBJECTS:crypto_obj>)
 if (MSVC)
 	target_compile_options(crypto PRIVATE /W0 /Qspectre)
 endif()
