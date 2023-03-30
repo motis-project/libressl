@@ -7,7 +7,7 @@ openbsd_branch=`cat OPENBSD_BRANCH`
 echo "pulling upstream openbsd source"
 if [ ! -d openbsd ]; then
 	if [ -z "$LIBRESSL_GIT" ]; then
-		git clone https://github.com/libressl-portable/openbsd.git
+		git clone https://github.com/libressl/openbsd.git
 	else
 		git clone $LIBRESSL_GIT/openbsd
 	fi
@@ -70,7 +70,6 @@ fi
 
 $CP $libssl_src/LICENSE COPYING
 
-$CP $libcrypto_src/arch/amd64/opensslconf.h include/openssl
 $CP $libcrypto_src/opensslfeatures.h include/openssl
 $CP $libssl_src/pqueue.h include
 
@@ -82,6 +81,7 @@ for i in crypto/compat; do
 	    $libc_src/crypt/chacha_private.h \
 	    $libc_src/stdlib/reallocarray.c \
 	    $libc_src/stdlib/recallocarray.c \
+	    $libc_src/stdlib/strtonum.c \
 	    $libc_src/string/explicit_bzero.c \
 	    $libc_src/string/strcasecmp.c \
 	    $libc_src/string/strlcpy.c \
@@ -115,14 +115,15 @@ copy_hdrs $libcrypto_src "stack/stack.h lhash/lhash.h stack/safestack.h
 	objects/objects.h asn1/asn1.h bn/bn.h ec/ec.h ecdsa/ecdsa.h
 	ecdh/ecdh.h rsa/rsa.h sha/sha.h x509/x509_vfy.h pkcs7/pkcs7.h pem/pem.h
 	pem/pem2.h hkdf/hkdf.h hmac/hmac.h rand/rand.h md5/md5.h
-	x509/x509v3.h x509/x509_verify.h conf/conf.h ocsp/ocsp.h
+	x509/x509v3.h conf/conf.h ocsp/ocsp.h
 	aes/aes.h modes/modes.h asn1/asn1t.h dso/dso.h bf/blowfish.h
 	bio/bio.h cast/cast.h cmac/cmac.h cms/cms.h conf/conf_api.h des/des.h dh/dh.h
 	dsa/dsa.h engine/engine.h ui/ui.h pkcs12/pkcs12.h ts/ts.h
 	md4/md4.h ripemd/ripemd.h whrlpool/whrlpool.h idea/idea.h
 	rc2/rc2.h rc4/rc4.h ui/ui_compat.h txt_db/txt_db.h
 	sm3/sm3.h sm4/sm4.h chacha/chacha.h evp/evp.h poly1305/poly1305.h
-	camellia/camellia.h gost/gost.h curve25519/curve25519.h"
+	camellia/camellia.h gost/gost.h curve25519/curve25519.h
+	ct/ct.h kdf/kdf.h"
 
 copy_hdrs $libssl_src "srtp.h ssl.h ssl2.h ssl3.h ssl23.h tls1.h dtls1.h"
 
@@ -139,6 +140,7 @@ echo "LibreSSL version `cat VERSION`"
 # copy libcrypto source
 echo copying libcrypto source
 rm -f crypto/*.c crypto/*.h
+touch crypto/empty.c
 for i in `awk '/SOURCES|HEADERS/ { print $3 }' crypto/Makefile.am` ; do
 	dir=`dirname $i`
 	mkdir -p crypto/$dir
@@ -148,6 +150,19 @@ for i in `awk '/SOURCES|HEADERS/ { print $3 }' crypto/Makefile.am` ; do
 		fi
 	fi
 done
+
+for i in $libcrypto_src/arch/*; do
+	arch=`basename $i`
+	mkdir -p include/arch/$arch
+	$CP $libcrypto_src/arch/$arch/opensslconf.h include/arch/$arch/
+done
+
+for i in $libcrypto_src/bn/arch/*; do
+	arch=`basename $i`
+	mkdir -p crypto/bn/arch/$arch
+	$CP $libcrypto_src/bn/arch/$arch/* crypto/bn/arch/$arch/
+done
+
 $CP crypto/compat/b_win.c crypto/bio
 $CP crypto/compat/ui_openssl_win.c crypto/ui
 # add the libcrypto symbol export list
@@ -199,9 +214,9 @@ gen_asm_stdout elf sha/asm/sha1-armv4-large.pl crypto/sha/sha1-elf-armv4.S
 gen_asm_stdout elf sha/asm/sha256-armv4.pl crypto/sha/sha256-elf-armv4.S
 gen_asm_stdout elf sha/asm/sha512-armv4.pl crypto/sha/sha512-elf-armv4.S
 gen_asm_stdout elf modes/asm/ghash-armv4.pl crypto/modes/ghash-elf-armv4.S
-$CP $libcrypto_src/armv4cpuid.S crypto
-$CP $libcrypto_src/armcap.c crypto
-$CP $libcrypto_src/arm_arch.h crypto
+$CP $libcrypto_src/arch/arm/armv4cpuid.S crypto
+$CP $libcrypto_src/arch/arm/armcap.c crypto
+$CP $libcrypto_src/arch/arm/arm_arch.h crypto
 
 for abi in elf macosx masm mingw64; do
 	echo generating x86_64 ASM source for $abi
@@ -229,6 +244,7 @@ done
 # copy libtls source
 echo copying libtls source
 rm -f tls/*.c tls/*.h libtls/src/*.c libtls/src/*.h
+touch tls/empty.c
 for i in `awk '/SOURCES|HEADERS/ { print $3 }' tls/Makefile.am` ; do
 	if [ -e $libtls_src/$i ]; then
 		$CP $libtls_src/$i tls
@@ -242,7 +258,6 @@ echo "copying nc(1) source"
 $CP $bin_src/nc/nc.1 apps/nc
 rm -f apps/nc/*.c apps/nc/*.h
 $CP_LIBC $libc_src/net/base64.c apps/nc/compat
-$CP_LIBC $libc_src/stdlib/strtonum.c apps/nc/compat
 for i in `awk '/SOURCES|HEADERS|MANS/ { print $3 }' apps/nc/Makefile.am` ; do
 	if [ -e $bin_src/nc/$i ]; then
 		$CP $bin_src/nc/$i apps/nc
@@ -254,7 +269,6 @@ echo "copying ocspcheck(1) source"
 $CP $sbin_src/ocspcheck/ocspcheck.8 apps/ocspcheck
 rm -f apps/ocspcheck/*.c apps/ocspcheck/*.h
 $CP_LIBC $libc_src/string/memmem.c apps/ocspcheck/compat
-$CP_LIBC $libc_src/stdlib/strtonum.c apps/ocspcheck/compat
 for i in `awk '/SOURCES|HEADERS|MANS/ { print $3 }' apps/ocspcheck/Makefile.am` ; do
 	if [ -e $sbin_src/ocspcheck/$i ]; then
 		$CP $sbin_src/ocspcheck/$i apps/ocspcheck
@@ -264,7 +278,6 @@ done
 # copy openssl(1) source
 echo "copying openssl(1) source"
 $CP $bin_src/openssl/openssl.1 apps/openssl
-$CP_LIBC $libc_src/stdlib/strtonum.c apps/openssl/compat
 $CP $libcrypto_src/cert.pem .
 $CP $libcrypto_src/openssl.cnf .
 $CP $libcrypto_src/x509v3.cnf .
@@ -277,19 +290,23 @@ done
 # copy libssl source
 echo "copying libssl source"
 rm -f ssl/*.c ssl/*.h
+touch ssl/empty.c
 for i in `awk '/SOURCES|HEADERS/ { print $3 }' ssl/Makefile.am` ; do
-	$CP $libssl_src/$i ssl
+	dir=`dirname $i`
+	mkdir -p ssl/$dir
+	$CP $libssl_src/$i ssl/$i
 done
 # add the libssl symbol export list
 $GREP '^[A-Za-z0-9_]' < $libssl_src/Symbols.list > ssl/ssl.sym
 
 # copy libcrypto tests
 echo "copying tests"
+touch tests/empty.c
 for i in `find $libcrypto_regress -name '*.c'`; do
 	 $CP "$i" tests
 done
 $CP $libcrypto_regress/evp/evptests.txt tests
-$CP $libcrypto_regress/aead/aeadtests.txt tests
+$CP $libcrypto_regress/aead/*.txt tests
 
 # generate libcrypto freenull.c
 awk -f $libcrypto_regress/free/freenull.awk \
@@ -310,8 +327,8 @@ for i in `find $libssl_regress -name '*.c'`; do
 	 $CP "$i" tests
 done
 $CP $libssl_regress/unit/tests.h tests
-$CP $libssl_regress/certs/ca.pem tests
-$CP $libssl_regress/certs/server.pem tests
+$CP $libssl_regress/certs/*.pem tests
+$CP $libssl_regress/certs/*.crl tests
 $CP $libssl_regress/pqueue/expected.txt tests/pq_expected.txt
 
 # copy libtls tests

@@ -1,6 +1,6 @@
 /*
  * Public domain
- * machine/endian.h compatibility shim
+ * endian.h compatibility shim
  */
 
 #ifndef LIBCRYPTOCOMPAT_BYTE_ORDER_H_
@@ -21,8 +21,11 @@
 #define BYTE_ORDER BIG_ENDIAN
 #endif
 
-#elif defined(__linux__) || defined(__midipix__)
-#include <endian.h>
+#elif defined(HAVE_ENDIAN_H)
+#include_next <endian.h>
+
+#elif defined(HAVE_MACHINE_ENDIAN_H)
+#include_next <machine/endian.h>
 
 #elif defined(__sun) || defined(_AIX) || defined(__hpux)
 #include <sys/types.h>
@@ -31,9 +34,6 @@
 #elif defined(__sgi)
 #include <standards.h>
 #include <sys/endian.h>
-
-#else
-#include_next <machine/endian.h>
 
 #endif
 
