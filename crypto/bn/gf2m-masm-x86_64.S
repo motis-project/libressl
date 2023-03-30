@@ -1,7 +1,7 @@
 ; 1 "crypto/bn/gf2m-masm-x86_64.S.tmp"
 ; 1 "<built-in>" 1
 ; 1 "<built-in>" 3
-; 340 "<built-in>" 3
+; 343 "<built-in>" 3
 ; 1 "<command line>" 1
 ; 1 "<built-in>" 2
 ; 1 "crypto/bn/gf2m-masm-x86_64.S.tmp" 2
@@ -362,11 +362,6 @@ $L$body_mul_2x2::
 	DB	0F3h,0C3h		;repret
 $L$end_mul_2x2::
 bn_GF2m_mul_2x2	ENDP
-DB	71,70,40,50,94,109,41,32,77,117,108,116,105,112,108,105
-DB	99,97,116,105,111,110,32,102,111,114,32,120,56,54,95,54
-DB	52,44,32,67,82,89,80,84,79,71,65,77,83,32,98,121
-DB	32,60,97,112,112,114,111,64,111,112,101,110,115,115,108,46
-DB	111,114,103,62,0
 ALIGN	16
 EXTERN	__imp_RtlVirtualUnwind:NEAR
 

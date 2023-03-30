@@ -1,4 +1,4 @@
-/* $OpenBSD: x509name.c,v 1.26 2018/05/30 15:35:45 tb Exp $ */
+/* $OpenBSD: x509name.c,v 1.31 2023/02/16 08:38:17 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -66,6 +66,8 @@
 #include <openssl/stack.h>
 #include <openssl/x509.h>
 
+#include "x509_local.h"
+
 int
 X509_NAME_get_text_by_NID(X509_NAME *name, int nid, char *buf, int len)
 {
@@ -76,6 +78,7 @@ X509_NAME_get_text_by_NID(X509_NAME *name, int nid, char *buf, int len)
 		return (-1);
 	return (X509_NAME_get_text_by_OBJ(name, obj, buf, len));
 }
+LCRYPTO_ALIAS(X509_NAME_get_text_by_NID);
 
 int
 X509_NAME_get_text_by_OBJ(X509_NAME *name, const ASN1_OBJECT *obj, char *buf,
@@ -97,6 +100,7 @@ X509_NAME_get_text_by_OBJ(X509_NAME *name, const ASN1_OBJECT *obj, char *buf,
 	}
 	return (i);
 }
+LCRYPTO_ALIAS(X509_NAME_get_text_by_OBJ);
 
 int
 X509_NAME_entry_count(const X509_NAME *name)
@@ -105,6 +109,7 @@ X509_NAME_entry_count(const X509_NAME *name)
 		return (0);
 	return (sk_X509_NAME_ENTRY_num(name->entries));
 }
+LCRYPTO_ALIAS(X509_NAME_entry_count);
 
 int
 X509_NAME_get_index_by_NID(const X509_NAME *name, int nid, int lastpos)
@@ -116,8 +121,9 @@ X509_NAME_get_index_by_NID(const X509_NAME *name, int nid, int lastpos)
 		return (-2);
 	return (X509_NAME_get_index_by_OBJ(name, obj, lastpos));
 }
+LCRYPTO_ALIAS(X509_NAME_get_index_by_NID);
 
-/* NOTE: you should be passsing -1, not 0 as lastpos */
+/* NOTE: you should be passing -1, not 0 as lastpos */
 int
 X509_NAME_get_index_by_OBJ(const X509_NAME *name, const ASN1_OBJECT *obj,
     int lastpos)
@@ -139,6 +145,7 @@ X509_NAME_get_index_by_OBJ(const X509_NAME *name, const ASN1_OBJECT *obj,
 	}
 	return (-1);
 }
+LCRYPTO_ALIAS(X509_NAME_get_index_by_OBJ);
 
 X509_NAME_ENTRY *
 X509_NAME_get_entry(const X509_NAME *name, int loc)
@@ -149,6 +156,7 @@ X509_NAME_get_entry(const X509_NAME *name, int loc)
 	else
 		return (sk_X509_NAME_ENTRY_value(name->entries, loc));
 }
+LCRYPTO_ALIAS(X509_NAME_get_entry);
 
 X509_NAME_ENTRY *
 X509_NAME_delete_entry(X509_NAME *name, int loc)
@@ -187,6 +195,7 @@ X509_NAME_delete_entry(X509_NAME *name, int loc)
 			sk_X509_NAME_ENTRY_value(sk, i)->set--;
 	return (ret);
 }
+LCRYPTO_ALIAS(X509_NAME_delete_entry);
 
 int
 X509_NAME_add_entry_by_OBJ(X509_NAME *name, const ASN1_OBJECT *obj, int type,
@@ -202,6 +211,7 @@ X509_NAME_add_entry_by_OBJ(X509_NAME *name, const ASN1_OBJECT *obj, int type,
 	X509_NAME_ENTRY_free(ne);
 	return ret;
 }
+LCRYPTO_ALIAS(X509_NAME_add_entry_by_OBJ);
 
 int
 X509_NAME_add_entry_by_NID(X509_NAME *name, int nid, int type,
@@ -217,6 +227,7 @@ X509_NAME_add_entry_by_NID(X509_NAME *name, int nid, int type,
 	X509_NAME_ENTRY_free(ne);
 	return ret;
 }
+LCRYPTO_ALIAS(X509_NAME_add_entry_by_NID);
 
 int
 X509_NAME_add_entry_by_txt(X509_NAME *name, const char *field, int type,
@@ -232,6 +243,7 @@ X509_NAME_add_entry_by_txt(X509_NAME *name, const char *field, int type,
 	X509_NAME_ENTRY_free(ne);
 	return ret;
 }
+LCRYPTO_ALIAS(X509_NAME_add_entry_by_txt);
 
 /* if set is -1, append to previous set, 0 'a new one', and 1,
  * prepend to the guy we are about to stomp on. */
@@ -290,6 +302,7 @@ err:
 		X509_NAME_ENTRY_free(new_name);
 	return (0);
 }
+LCRYPTO_ALIAS(X509_NAME_add_entry);
 
 X509_NAME_ENTRY *
 X509_NAME_ENTRY_create_by_txt(X509_NAME_ENTRY **ne,
@@ -308,6 +321,7 @@ X509_NAME_ENTRY_create_by_txt(X509_NAME_ENTRY **ne,
 	ASN1_OBJECT_free(obj);
 	return nentry;
 }
+LCRYPTO_ALIAS(X509_NAME_ENTRY_create_by_txt);
 
 X509_NAME_ENTRY *
 X509_NAME_ENTRY_create_by_NID(X509_NAME_ENTRY **ne, int nid, int type,
@@ -325,6 +339,7 @@ X509_NAME_ENTRY_create_by_NID(X509_NAME_ENTRY **ne, int nid, int type,
 	ASN1_OBJECT_free(obj);
 	return nentry;
 }
+LCRYPTO_ALIAS(X509_NAME_ENTRY_create_by_NID);
 
 X509_NAME_ENTRY *
 X509_NAME_ENTRY_create_by_OBJ(X509_NAME_ENTRY **ne, const ASN1_OBJECT *obj,
@@ -352,6 +367,7 @@ err:
 		X509_NAME_ENTRY_free(ret);
 	return (NULL);
 }
+LCRYPTO_ALIAS(X509_NAME_ENTRY_create_by_OBJ);
 
 int
 X509_NAME_ENTRY_set_object(X509_NAME_ENTRY *ne, const ASN1_OBJECT *obj)
@@ -364,6 +380,7 @@ X509_NAME_ENTRY_set_object(X509_NAME_ENTRY *ne, const ASN1_OBJECT *obj)
 	ne->object = OBJ_dup(obj);
 	return ((ne->object == NULL) ? 0 : 1);
 }
+LCRYPTO_ALIAS(X509_NAME_ENTRY_set_object);
 
 int
 X509_NAME_ENTRY_set_data(X509_NAME_ENTRY *ne, int type,
@@ -389,6 +406,7 @@ X509_NAME_ENTRY_set_data(X509_NAME_ENTRY *ne, int type,
 	}
 	return (1);
 }
+LCRYPTO_ALIAS(X509_NAME_ENTRY_set_data);
 
 ASN1_OBJECT *
 X509_NAME_ENTRY_get_object(const X509_NAME_ENTRY *ne)
@@ -397,6 +415,7 @@ X509_NAME_ENTRY_get_object(const X509_NAME_ENTRY *ne)
 		return (NULL);
 	return (ne->object);
 }
+LCRYPTO_ALIAS(X509_NAME_ENTRY_get_object);
 
 ASN1_STRING *
 X509_NAME_ENTRY_get_data(const X509_NAME_ENTRY *ne)
@@ -405,9 +424,11 @@ X509_NAME_ENTRY_get_data(const X509_NAME_ENTRY *ne)
 		return (NULL);
 	return (ne->value);
 }
+LCRYPTO_ALIAS(X509_NAME_ENTRY_get_data);
 
 int
 X509_NAME_ENTRY_set(const X509_NAME_ENTRY *ne)
 {
 	return (ne->set);
 }
+LCRYPTO_ALIAS(X509_NAME_ENTRY_set);

@@ -1,4 +1,4 @@
-/* $OpenBSD: ecs_asn1.c,v 1.9 2018/03/17 15:24:44 tb Exp $ */
+/* $OpenBSD: ecs_asn1.c,v 1.13 2023/03/07 09:27:10 jsing Exp $ */
 /* ====================================================================
  * Copyright (c) 2000-2002 The OpenSSL Project.  All rights reserved.
  *
@@ -53,7 +53,7 @@
  *
  */
 
-#include "ecs_locl.h"
+#include "ecs_local.h"
 #include <openssl/err.h>
 #include <openssl/asn1t.h>
 
@@ -63,14 +63,14 @@ static const ASN1_TEMPLATE ECDSA_SIG_seq_tt[] = {
 		.tag = 0,
 		.offset = offsetof(ECDSA_SIG, r),
 		.field_name = "r",
-		.item = &CBIGNUM_it,
+		.item = &BIGNUM_it,
 	},
 	{
 		.flags = 0,
 		.tag = 0,
 		.offset = offsetof(ECDSA_SIG, s),
 		.field_name = "s",
-		.item = &CBIGNUM_it,
+		.item = &BIGNUM_it,
 	},
 };
 
@@ -123,14 +123,26 @@ ECDSA_SIG_get0(const ECDSA_SIG *sig, const BIGNUM **pr, const BIGNUM **ps)
 		*ps = sig->s;
 }
 
+const BIGNUM *
+ECDSA_SIG_get0_r(const ECDSA_SIG *sig)
+{
+	return sig->r;
+}
+
+const BIGNUM *
+ECDSA_SIG_get0_s(const ECDSA_SIG *sig)
+{
+	return sig->s;
+}
+
 int
 ECDSA_SIG_set0(ECDSA_SIG *sig, BIGNUM *r, BIGNUM *s)
 {
 	if (r == NULL || s == NULL)
 		return 0;
 
-	BN_clear_free(sig->r);
-	BN_clear_free(sig->s);
+	BN_free(sig->r);
+	BN_free(sig->s);
 	sig->r = r;
 	sig->s = s;
 	return 1;

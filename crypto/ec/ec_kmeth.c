@@ -1,4 +1,4 @@
-/*	$OpenBSD: ec_kmeth.c,v 1.5 2019/05/10 19:15:06 bcook Exp $	*/
+/*	$OpenBSD: ec_kmeth.c,v 1.7 2022/11/26 16:08:52 tb Exp $	*/
 /*
  * Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project.
@@ -58,8 +58,9 @@
 #endif
 #include <openssl/err.h>
 
-#include "ec_lcl.h"
-#include "ecs_locl.h"
+#include "bn_local.h"
+#include "ec_local.h"
+#include "ecs_local.h"
 
 static const EC_KEY_METHOD openssl_ec_key_method = {
 	.name = "OpenSSL EC_KEY method",

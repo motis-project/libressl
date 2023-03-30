@@ -1,4 +1,4 @@
-/* $OpenBSD: bio_ssl.c,v 1.31 2021/07/01 17:53:39 jsing Exp $ */
+/* $OpenBSD: bio_ssl.c,v 1.38 2023/02/16 08:38:17 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -66,7 +66,8 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 
-#include "ssl_locl.h"
+#include "bio_local.h"
+#include "ssl_local.h"
 
 static int ssl_write(BIO *h, const char *buf, int num);
 static int ssl_read(BIO *h, char *buf, int size);
@@ -74,7 +75,7 @@ static int ssl_puts(BIO *h, const char *str);
 static long ssl_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int ssl_new(BIO *h);
 static int ssl_free(BIO *data);
-static long ssl_callback_ctrl(BIO *h, int cmd, bio_info_cb *fp);
+static long ssl_callback_ctrl(BIO *h, int cmd, BIO_info_cb *fp);
 typedef struct bio_ssl_st {
 	SSL *ssl; /* The ssl handle :-) */
 	/* re-negotiate every time the total number of bytes is this size */
@@ -102,6 +103,7 @@ BIO_f_ssl(void)
 {
 	return (&methods_sslp);
 }
+LSSL_ALIAS(BIO_f_ssl);
 
 static int
 ssl_new(BIO *bi)
@@ -293,11 +295,9 @@ ssl_ctrl(BIO *b, int cmd, long num, void *ptr)
 	case BIO_CTRL_RESET:
 		SSL_shutdown(ssl);
 
-		if (ssl->internal->handshake_func ==
-		    ssl->method->ssl_connect)
+		if (ssl->handshake_func == ssl->method->ssl_connect)
 			SSL_set_connect_state(ssl);
-		else if (ssl->internal->handshake_func ==
-		    ssl->method->ssl_accept)
+		else if (ssl->handshake_func == ssl->method->ssl_accept)
 			SSL_set_accept_state(ssl);
 
 		SSL_clear(ssl);
@@ -462,7 +462,7 @@ ssl_ctrl(BIO *b, int cmd, long num, void *ptr)
 }
 
 static long
-ssl_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp)
+ssl_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
 {
 	SSL *ssl;
 	BIO_SSL *bs;
@@ -533,6 +533,7 @@ BIO_new_ssl_connect(SSL_CTX *ctx)
 	BIO_free(ssl);
 	return (NULL);
 }
+LSSL_ALIAS(BIO_new_ssl_connect);
 
 BIO *
 BIO_new_ssl(SSL_CTX *ctx, int client)
@@ -557,6 +558,7 @@ BIO_new_ssl(SSL_CTX *ctx, int client)
 	BIO_free(ret);
 	return (NULL);
 }
+LSSL_ALIAS(BIO_new_ssl);
 
 int
 BIO_ssl_copy_session_id(BIO *t, BIO *f)

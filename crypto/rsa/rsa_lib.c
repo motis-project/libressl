@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_lib.c,v 1.40 2020/01/17 10:40:03 inoguchi Exp $ */
+/* $OpenBSD: rsa_lib.c,v 1.46 2023/03/11 21:14:26 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -67,7 +67,8 @@
 #include <openssl/lhash.h>
 #include <openssl/rsa.h>
 
-#include "evp_locl.h"
+#include "evp_local.h"
+#include "rsa_local.h"
 
 #ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
@@ -199,14 +200,14 @@ RSA_free(RSA *r)
 
 	CRYPTO_free_ex_data(CRYPTO_EX_INDEX_RSA, r, &r->ex_data);
 
-	BN_clear_free(r->n);
-	BN_clear_free(r->e);
-	BN_clear_free(r->d);
-	BN_clear_free(r->p);
-	BN_clear_free(r->q);
-	BN_clear_free(r->dmp1);
-	BN_clear_free(r->dmq1);
-	BN_clear_free(r->iqmp);
+	BN_free(r->n);
+	BN_free(r->e);
+	BN_free(r->d);
+	BN_free(r->p);
+	BN_free(r->q);
+	BN_free(r->dmp1);
+	BN_free(r->dmq1);
+	BN_free(r->iqmp);
 	BN_BLINDING_free(r->blinding);
 	BN_BLINDING_free(r->mt_blinding);
 	RSA_PSS_PARAMS_free(r->pss);
@@ -238,6 +239,12 @@ void *
 RSA_get_ex_data(const RSA *r, int idx)
 {
 	return CRYPTO_get_ex_data(&r->ex_data, idx);
+}
+
+int
+RSA_security_bits(const RSA *rsa)
+{
+	return BN_security_bits(RSA_bits(rsa), -1);
 }
 
 void
@@ -291,7 +298,7 @@ RSA_set0_crt_params(RSA *r, BIGNUM *dmp1, BIGNUM *dmq1, BIGNUM *iqmp)
 	if ((r->dmp1 == NULL && dmp1 == NULL) ||
 	    (r->dmq1 == NULL && dmq1 == NULL) ||
 	    (r->iqmp == NULL && iqmp == NULL))
-	       	return 0;
+		return 0;
 
 	if (dmp1 != NULL) {
 		BN_free(r->dmp1);
@@ -334,6 +341,60 @@ RSA_set0_factors(RSA *r, BIGNUM *p, BIGNUM *q)
 	}
 
 	return 1;
+}
+
+const BIGNUM *
+RSA_get0_n(const RSA *r)
+{
+	return r->n;
+}
+
+const BIGNUM *
+RSA_get0_e(const RSA *r)
+{
+	return r->e;
+}
+
+const BIGNUM *
+RSA_get0_d(const RSA *r)
+{
+	return r->d;
+}
+
+const BIGNUM *
+RSA_get0_p(const RSA *r)
+{
+	return r->p;
+}
+
+const BIGNUM *
+RSA_get0_q(const RSA *r)
+{
+	return r->q;
+}
+
+const BIGNUM *
+RSA_get0_dmp1(const RSA *r)
+{
+	return r->dmp1;
+}
+
+const BIGNUM *
+RSA_get0_dmq1(const RSA *r)
+{
+	return r->dmq1;
+}
+
+const BIGNUM *
+RSA_get0_iqmp(const RSA *r)
+{
+	return r->iqmp;
+}
+
+const RSA_PSS_PARAMS *
+RSA_get0_pss_params(const RSA *r)
+{
+	return r->pss;
 }
 
 void

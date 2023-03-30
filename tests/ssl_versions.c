@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl_versions.c,v 1.15 2021/06/27 16:54:55 jsing Exp $ */
+/* $OpenBSD: ssl_versions.c,v 1.19 2022/11/26 16:08:57 tb Exp $ */
 /*
  * Copyright (c) 2016, 2017 Joel Sing <jsing@openbsd.org>
  *
@@ -17,7 +17,7 @@
 
 #include <openssl/ssl.h>
 
-#include "ssl_locl.h"
+#include "ssl_local.h"
 
 struct version_range_test {
 	const long options;
@@ -214,8 +214,8 @@ test_ssl_enabled_version_range(void)
 		SSL_set_options(ssl, vrt->options);
 
 		minver = maxver = 0xffff;
-		ssl->internal->min_tls_version = vrt->minver;
-		ssl->internal->max_tls_version = vrt->maxver;
+		ssl->min_tls_version = vrt->minver;
+		ssl->max_tls_version = vrt->maxver;
 
 		if (ssl_enabled_tls_version_range(ssl, &minver, &maxver) != 1) {
 			if (vrt->want_minver != 0 || vrt->want_maxver != 0) {
@@ -502,11 +502,13 @@ test_ssl_max_shared_version(void)
 
 		if ((ssl_ctx = SSL_CTX_new(svt->ssl_method())) == NULL) {
 			fprintf(stderr, "SSL_CTX_new() returned NULL\n");
-			return 1;
+			failed++;
+			goto err;
 		}
 		if ((ssl = SSL_new(ssl_ctx)) == NULL) {
 			fprintf(stderr, "SSL_new() returned NULL\n");
-			return 1;
+			failed++;
+			goto err;
 		}
 
 		SSL_clear_options(ssl, SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1 |
@@ -514,8 +516,8 @@ test_ssl_max_shared_version(void)
 		SSL_set_options(ssl, svt->options);
 
 		maxver = 0;
-		ssl->internal->min_tls_version = svt->minver;
-		ssl->internal->max_tls_version = svt->maxver;
+		ssl->min_tls_version = svt->minver;
+		ssl->max_tls_version = svt->maxver;
 
 		if (!ssl_max_shared_version(ssl, svt->peerver, &maxver)) {
 			if (svt->want_maxver != 0) {
@@ -524,6 +526,10 @@ test_ssl_max_shared_version(void)
 				    i, svt->peerver);
 				failed++;
 			}
+			SSL_CTX_free(ssl_ctx);
+			SSL_free(ssl);
+			ssl_ctx = NULL;
+			ssl = NULL;
 			continue;
 		}
 		if (maxver != svt->want_maxver) {
@@ -535,7 +541,13 @@ test_ssl_max_shared_version(void)
 
 		SSL_CTX_free(ssl_ctx);
 		SSL_free(ssl);
+		ssl_ctx = NULL;
+		ssl = NULL;
 	}
+
+ err:
+	SSL_CTX_free(ssl_ctx);
+	SSL_free(ssl);
 
 	return (failed);
 }
