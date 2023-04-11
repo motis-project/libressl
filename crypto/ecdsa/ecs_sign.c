@@ -1,4 +1,4 @@
-/* $OpenBSD: ecs_sign.c,v 1.7 2019/01/19 01:07:00 tb Exp $ */
+/* $OpenBSD: ecs_sign.c,v 1.10 2022/11/26 16:08:52 tb Exp $ */
 /* ====================================================================
  * Copyright (c) 1998-2002 The OpenSSL Project.  All rights reserved.
  *
@@ -58,9 +58,12 @@
 #ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
 #endif
+#include <openssl/err.h>
+#include <openssl/evp.h>
 
-#include "ecs_locl.h"
-#include "ec_lcl.h"
+#include "bn_local.h"
+#include "ecs_local.h"
+#include "ec_local.h"
 
 ECDSA_SIG *
 ECDSA_do_sign(const unsigned char *dgst, int dlen, EC_KEY *eckey)

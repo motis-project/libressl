@@ -1,4 +1,4 @@
-/* $OpenBSD: bn_print.c,v 1.32 2021/08/31 11:19:19 tb Exp $ */
+/* $OpenBSD: bn_print.c,v 1.38 2023/02/13 04:25:37 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -66,7 +66,7 @@
 #include <openssl/buffer.h>
 #include <openssl/err.h>
 
-#include "bn_lcl.h"
+#include "bn_local.h"
 
 static const char Hex[]="0123456789ABCDEF";
 
@@ -205,7 +205,7 @@ BN_hex2bn(BIGNUM **bn, const char *a)
 	for (i = 0; i <= (INT_MAX / 4) && isxdigit((unsigned char)a[i]); i++)
 		;
 	if (i > INT_MAX / 4)
-		goto err;
+		return (0);
 
 	num = i + neg;
 	if (bn == NULL)
@@ -221,7 +221,7 @@ BN_hex2bn(BIGNUM **bn, const char *a)
 	}
 
 	/* i is the number of hex digits */
-	if (bn_expand(ret, i * 4) == NULL)
+	if (!bn_expand(ret, i * 4))
 		goto err;
 
 	j = i; /* least significant 'hex' */
@@ -251,10 +251,10 @@ BN_hex2bn(BIGNUM **bn, const char *a)
 	}
 	ret->top = h;
 	bn_correct_top(ret);
-	ret->neg = neg;
+
+	BN_set_negative(ret, neg);
 
 	*bn = ret;
-	bn_check_top(ret);
 	return (num);
 
 err:
@@ -281,7 +281,7 @@ BN_dec2bn(BIGNUM **bn, const char *a)
 	for (i = 0; i <= (INT_MAX / 4) && isdigit((unsigned char)a[i]); i++)
 		;
 	if (i > INT_MAX / 4)
-		goto err;
+		return (0);
 
 	num = i + neg;
 	if (bn == NULL)
@@ -298,7 +298,7 @@ BN_dec2bn(BIGNUM **bn, const char *a)
 	}
 
 	/* i is the number of digits, a bit of an over expand */
-	if (bn_expand(ret, i * 4) == NULL)
+	if (!bn_expand(ret, i * 4))
 		goto err;
 
 	j = BN_DEC_NUM - (i % BN_DEC_NUM);
@@ -310,17 +310,20 @@ BN_dec2bn(BIGNUM **bn, const char *a)
 		l += *a - '0';
 		a++;
 		if (++j == BN_DEC_NUM) {
-			BN_mul_word(ret, BN_DEC_CONV);
-			BN_add_word(ret, l);
+			if (!BN_mul_word(ret, BN_DEC_CONV))
+				goto err;
+			if (!BN_add_word(ret, l))
+				goto err;
 			l = 0;
 			j = 0;
 		}
 	}
-	ret->neg = neg;
 
 	bn_correct_top(ret);
+
+	BN_set_negative(ret, neg);
+
 	*bn = ret;
-	bn_check_top(ret);
 	return (num);
 
 err:
@@ -344,7 +347,7 @@ BN_asc2bn(BIGNUM **bn, const char *a)
 			return 0;
 	}
 	if (*a == '-')
-		(*bn)->neg = 1;
+		BN_set_negative(*bn, 1);
 	return 1;
 }
 

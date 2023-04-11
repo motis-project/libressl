@@ -1,4 +1,4 @@
-/* $OpenBSD: gost2814789.c,v 1.6 2020/09/12 02:45:05 inoguchi Exp $ */
+/* $OpenBSD: gost2814789.c,v 1.8 2022/11/26 16:08:53 tb Exp $ */
 /*
  * Copyright (c) 2014 Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
  * Copyright (c) 2005-2006 Cryptocom LTD
@@ -49,8 +49,7 @@
  * ====================================================================
  */
 
-#include <machine/endian.h>
-
+#include <endian.h>
 #include <string.h>
 
 #include <openssl/opensslconf.h>
@@ -59,7 +58,7 @@
 #include <openssl/objects.h>
 #include <openssl/gost.h>
 
-#include "gost_locl.h"
+#include "gost_local.h"
 
 static inline unsigned int
 f(const GOST2814789_KEY *c, unsigned int x)

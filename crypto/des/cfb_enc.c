@@ -1,4 +1,4 @@
-/* $OpenBSD: cfb_enc.c,v 1.13 2015/02/10 09:46:30 miod Exp $ */
+/* $OpenBSD: cfb_enc.c,v 1.15 2022/11/26 16:08:51 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -56,8 +56,8 @@
  * [including the GNU Public Licence.]
  */
 
-#include "des_locl.h"
-#include <machine/endian.h>
+#include "des_local.h"
+#include <endian.h>
 
 /* The input and output are loaded in multiples of 8 bits.
  * What this means is that if you hame numbits=12 and length=2

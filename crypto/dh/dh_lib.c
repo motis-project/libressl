@@ -1,4 +1,4 @@
-/* $OpenBSD: dh_lib.c,v 1.32 2018/05/02 15:48:38 tb Exp $ */
+/* $OpenBSD: dh_lib.c,v 1.38 2023/03/07 09:27:10 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -68,6 +68,8 @@
 #ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
 #endif
+
+#include "dh_local.h"
 
 static const DH_METHOD *default_DH_method = NULL;
 
@@ -192,14 +194,14 @@ DH_free(DH *r)
 
 	CRYPTO_free_ex_data(CRYPTO_EX_INDEX_DH, r, &r->ex_data);
 
-	BN_clear_free(r->p);
-	BN_clear_free(r->g);
-	BN_clear_free(r->q);
-	BN_clear_free(r->j);
+	BN_free(r->p);
+	BN_free(r->g);
+	BN_free(r->q);
+	BN_free(r->j);
 	free(r->seed);
-	BN_clear_free(r->counter);
-	BN_clear_free(r->pub_key);
-	BN_clear_free(r->priv_key);
+	BN_free(r->counter);
+	BN_free(r->pub_key);
+	BN_free(r->priv_key);
 	free(r);
 }
 
@@ -243,6 +245,19 @@ DH_bits(const DH *dh)
 	return BN_num_bits(dh->p);
 }
 
+int
+DH_security_bits(const DH *dh)
+{
+	int N = -1;
+
+	if (dh->q != NULL)
+		N = BN_num_bits(dh->q);
+	else if (dh->length > 0)
+		N = dh->length;
+
+	return BN_security_bits(BN_num_bits(dh->p), N);
+}
+
 ENGINE *
 DH_get0_engine(DH *dh)
 {
@@ -273,6 +288,7 @@ DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g)
 	if (q != NULL) {
 		BN_free(dh->q);
 		dh->q = q;
+		dh->length = BN_num_bits(dh->q);
 	}
 	if (g != NULL) {
 		BN_free(dh->g);
@@ -306,6 +322,36 @@ DH_set0_key(DH *dh, BIGNUM *pub_key, BIGNUM *priv_key)
 	return 1;
 }
 
+const BIGNUM *
+DH_get0_p(const DH *dh)
+{
+	return dh->p;
+}
+
+const BIGNUM *
+DH_get0_q(const DH *dh)
+{
+	return dh->q;
+}
+
+const BIGNUM *
+DH_get0_g(const DH *dh)
+{
+	return dh->g;
+}
+
+const BIGNUM *
+DH_get0_priv_key(const DH *dh)
+{
+	return dh->priv_key;
+}
+
+const BIGNUM *
+DH_get0_pub_key(const DH *dh)
+{
+	return dh->pub_key;
+}
+
 void
 DH_clear_flags(DH *dh, int flags)
 {
@@ -322,6 +368,12 @@ void
 DH_set_flags(DH *dh, int flags)
 {
 	dh->flags |= flags;
+}
+
+long
+DH_get_length(const DH *dh)
+{
+	return dh->length;
 }
 
 int

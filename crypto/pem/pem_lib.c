@@ -1,4 +1,4 @@
-/* $OpenBSD: pem_lib.c,v 1.49 2019/09/06 17:41:05 jsing Exp $ */
+/* $OpenBSD: pem_lib.c,v 1.52 2022/11/26 16:08:53 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -78,7 +78,8 @@
 #include <openssl/engine.h>
 #endif
 
-#include "asn1_locl.h"
+#include "asn1_local.h"
+#include "evp_local.h"
 
 #define MIN_LENGTH	4
 
@@ -607,8 +608,7 @@ PEM_write_bio(BIO *bp, const char *name, const char *header,
 	    (BIO_write(bp, "-----\n", 6) != 6))
 		goto err;
 
-	i = strlen(header);
-	if (i > 0) {
+	if (header != NULL && (i = strlen(header)) > 0) {
 		if ((BIO_write(bp, header, i) != i) ||
 		    (BIO_write(bp, "\n", 1) != 1))
 			goto err;
