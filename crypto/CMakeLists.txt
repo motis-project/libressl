@@ -1055,6 +1055,8 @@ endif()
 
 add_library(crypto $<TARGET_OBJECTS:crypto_obj> empty.c)
 
+target_include_directories(crypto SYSTEM PUBLIC ../include)
+
 export_symbol(crypto ${CMAKE_CURRENT_BINARY_DIR}/crypto_p.sym)
 target_link_libraries(crypto ${PLATFORM_LIBS})
 if (WIN32)

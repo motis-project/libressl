@@ -50,6 +50,8 @@ target_include_directories(tls_obj
 add_library(tls $<TARGET_OBJECTS:tls_obj> $<TARGET_OBJECTS:ssl_obj>
 	$<TARGET_OBJECTS:crypto_obj> empty.c)
 
+target_include_directories(tls SYSTEM PUBLIC ../include)
+
 export_symbol(tls ${CMAKE_CURRENT_BINARY_DIR}/tls.sym)
 target_link_libraries(tls ${PLATFORM_LIBS})
 if (WIN32)

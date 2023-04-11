@@ -83,6 +83,8 @@ else()
 	add_library(ssl $<TARGET_OBJECTS:ssl_obj> empty.c)
 endif()
 
+target_include_directories(ssl SYSTEM PUBLIC ../include)
+
 export_symbol(ssl ${CMAKE_CURRENT_SOURCE_DIR}/ssl.sym)
 target_link_libraries(ssl crypto ${PLATFORM_LIBS})
 if (WIN32)
