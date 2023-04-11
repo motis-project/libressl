@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl_algs.c,v 1.29 2021/05/16 08:24:21 jsing Exp $ */
+/* $OpenBSD: ssl_algs.c,v 1.31 2022/11/26 16:08:55 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -62,7 +62,7 @@
 #include <openssl/objects.h>
 #include <openssl/opensslconf.h>
 
-#include "ssl_locl.h"
+#include "ssl_local.h"
 
 int
 SSL_library_init(void)
@@ -113,7 +113,6 @@ SSL_library_init(void)
 	EVP_add_digest(EVP_sha256());
 	EVP_add_digest(EVP_sha384());
 	EVP_add_digest(EVP_sha512());
-	EVP_add_digest(EVP_ecdsa());
 #ifndef OPENSSL_NO_GOST
 	EVP_add_digest(EVP_gostr341194());
 	EVP_add_digest(EVP_gost2814789imit());

@@ -30,7 +30,7 @@ init:
   # update mysy2
   - C:\msys64\usr\bin\bash -lc "pacman --needed --noconfirm -Sy pacman-mirrors"
   - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Syu"
-  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy autoconf perl git"
+  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy autoconf perl git automake libtool"
 
 before_build:
   - bash autogen.sh
@@ -49,6 +49,5 @@ on_failure:
   - appveyor PushArtifact Testing.zip
 
 artifacts:
-  - path: build\Testing
-    name: Testing
+  - path: build
     type: zip

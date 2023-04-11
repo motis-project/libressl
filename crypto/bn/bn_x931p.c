@@ -1,4 +1,4 @@
-/* $OpenBSD: bn_x931p.c,v 1.11 2019/01/20 01:56:59 tb Exp $ */
+/* $OpenBSD: bn_x931p.c,v 1.15 2022/12/26 07:18:51 jmc Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2005.
  */
@@ -59,7 +59,7 @@
 #include <stdio.h>
 #include <openssl/bn.h>
 
-#include "bn_lcl.h"
+#include "bn_local.h"
 
 /* X9.31 routines for prime derivation */
 
@@ -80,7 +80,7 @@ bn_x931_derive_pi(BIGNUM *pi, const BIGNUM *Xpi, BN_CTX *ctx, BN_GENCB *cb)
 	for (;;) {
 		i++;
 		BN_GENCB_call(cb, 0, i);
-		/* NB 27 MR is specificed in X9.31 */
+		/* NB 27 MR is specified in X9.31 */
 		is_prime = BN_is_prime_fasttest_ex(pi, 27, ctx, 1, cb);
 		if (is_prime < 0)
 			return 0;
@@ -139,13 +139,13 @@ BN_X931_derive_prime_ex(BIGNUM *p, BIGNUM *p1, BIGNUM *p2, const BIGNUM *Xp,
 
 	/* First set p to value of Rp */
 
-	if (!BN_mod_inverse_ct(p, p2, p1, ctx))
+	if (BN_mod_inverse_ct(p, p2, p1, ctx) == NULL)
 		goto err;
 
 	if (!BN_mul(p, p, p2, ctx))
 		goto err;
 
-	if (!BN_mod_inverse_ct(t, p1, p2, ctx))
+	if (BN_mod_inverse_ct(t, p1, p2, ctx) == NULL)
 		goto err;
 
 	if (!BN_mul(t, t, p1, ctx))
@@ -154,7 +154,7 @@ BN_X931_derive_prime_ex(BIGNUM *p, BIGNUM *p1, BIGNUM *p2, const BIGNUM *Xp,
 	if (!BN_sub(p, p, t))
 		goto err;
 
-	if (p->neg && !BN_add(p, p, p1p2))
+	if (BN_is_negative(p) && !BN_add(p, p, p1p2))
 		goto err;
 
 	/* p now equals Rp */
@@ -205,8 +205,8 @@ err:
 	return ret;
 }
 
-/* Generate pair of paramters Xp, Xq for X9.31 prime generation.
- * Note: nbits paramter is sum of number of bits in both.
+/* Generate pair of parameters Xp, Xq for X9.31 prime generation.
+ * Note: nbits parameter is sum of number of bits in both.
  */
 
 int
@@ -237,7 +237,8 @@ BN_X931_generate_Xpq(BIGNUM *Xp, BIGNUM *Xq, int nbits, BN_CTX *ctx)
 		if (!BN_rand(Xq, nbits, 1, 0))
 			goto err;
 		/* Check that |Xp - Xq| > 2^(nbits - 100) */
-		BN_sub(t, Xp, Xq);
+		if (!BN_sub(t, Xp, Xq))
+			goto err;
 		if (BN_num_bits(t) > (nbits - 100))
 			break;
 	}

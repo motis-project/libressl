@@ -1,4 +1,4 @@
-/* $OpenBSD: bss_dgram.c,v 1.42 2018/05/12 17:47:53 tb Exp $ */
+/* $OpenBSD: bss_dgram.c,v 1.44 2022/12/26 07:18:51 jmc Exp $ */
 /* 
  * DTLS implementation written by Nagendra Modadugu
  * (nagendra@cs.stanford.edu) for the OpenSSL project 2005.  
@@ -71,6 +71,8 @@
 #include <openssl/opensslconf.h>
 
 #include <openssl/bio.h>
+
+#include "bio_local.h"
 
 #ifndef OPENSSL_NO_DGRAM
 
@@ -212,7 +214,7 @@ dgram_adjust_rcv_timeout(BIO *b)
 			timeleft.tv_usec = 1;
 		}
 
-		/* Adjust socket timeout if next handhake message timer
+		/* Adjust socket timeout if next handshake message timer
 		 * will expire earlier.
 		 */
 		if ((data->socket_timeout.tv_sec == 0 &&

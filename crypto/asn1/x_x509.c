@@ -1,4 +1,4 @@
-/* $OpenBSD: x_x509.c,v 1.27 2021/09/02 12:41:44 job Exp $ */
+/* $OpenBSD: x_x509.c,v 1.31 2022/11/26 16:08:50 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -64,6 +64,8 @@
 #include <openssl/evp.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
+
+#include "x509_local.h"
 
 static const ASN1_AUX X509_CINF_aux = {
 	.flags = ASN1_AFLG_ENCODING,
@@ -337,7 +339,7 @@ d2i_X509_AUX(X509 **a, const unsigned char **pp, long length)
 	}
 	return ret;
 
-err:
+ err:
 	X509_free(ret);
 	return NULL;
 }
@@ -351,6 +353,13 @@ i2d_X509_AUX(X509 *a, unsigned char **pp)
 	if (a)
 		length += i2d_X509_CERT_AUX(a->aux, pp);
 	return length;
+}
+
+int
+i2d_re_X509_tbs(X509 *x, unsigned char **pp)
+{
+	x->cert_info->enc.modified = 1;
+	return i2d_X509_CINF(x->cert_info, pp);
 }
 
 void

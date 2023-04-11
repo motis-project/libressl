@@ -1,4 +1,4 @@
-/* $OpenBSD: gostr341001_pmeth.c,v 1.14 2017/01/29 17:49:23 beck Exp $ */
+/* $OpenBSD: gostr341001_pmeth.c,v 1.17 2022/11/26 16:08:53 tb Exp $ */
 /*
  * Copyright (c) 2014 Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
  * Copyright (c) 2005-2006 Cryptocom LTD
@@ -62,8 +62,9 @@
 #include <openssl/ecdsa.h>
 #include <openssl/x509.h>
 
-#include "evp_locl.h"
-#include "gost_locl.h"
+#include "ecs_local.h"
+#include "evp_local.h"
+#include "gost_local.h"
 #include "gost_asn1.h"
 
 static ECDSA_SIG *
@@ -174,7 +175,10 @@ pkey_gost01_copy(EVP_PKEY_CTX *dst, EVP_PKEY_CTX *src)
 static void
 pkey_gost01_cleanup(EVP_PKEY_CTX *ctx)
 {
-	struct gost_pmeth_data *data = EVP_PKEY_CTX_get_data(ctx);
+	struct gost_pmeth_data *data;
+
+	if ((data = EVP_PKEY_CTX_get_data(ctx)) == NULL)
+		return;
 
 	free(data->shared_ukm);
 	free(data);

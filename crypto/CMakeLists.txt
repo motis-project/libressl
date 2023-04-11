@@ -1,3 +1,5 @@
+add_definitions(-DLIBRESSL_CRYPTO_INTERNAL)
+
 if(HOST_ASM_ELF_ARMV4)
 	set(
 		ASM_ARMV4_ELF_SRC
@@ -45,6 +47,19 @@ if(HOST_ASM_ELF_X86_64)
 		sha/sha512-elf-x86_64.S
 		whrlpool/wp-elf-x86_64.S
 		cpuid-elf-x86_64.S
+
+		bn/arch/amd64/bignum_add.S
+		bn/arch/amd64/bignum_cmadd.S
+		bn/arch/amd64/bignum_cmul.S
+		bn/arch/amd64/bignum_mul.S
+		bn/arch/amd64/bignum_mul_4_8_alt.S
+		bn/arch/amd64/bignum_mul_8_16_alt.S
+		bn/arch/amd64/bignum_sqr.S
+		bn/arch/amd64/bignum_sqr_4_8_alt.S
+		bn/arch/amd64/bignum_sqr_8_16_alt.S
+		bn/arch/amd64/bignum_sub.S
+		bn/arch/amd64/word_clz.S
+		bn/arch/amd64/bn_arch.c
 	)
 	add_definitions(-DAES_ASM)
 	add_definitions(-DBSAES_ASM)
@@ -87,6 +102,19 @@ if(HOST_ASM_MACOSX_X86_64)
 		sha/sha512-macosx-x86_64.S
 		whrlpool/wp-macosx-x86_64.S
 		cpuid-macosx-x86_64.S
+
+		bn/arch/amd64/bignum_add.S
+		bn/arch/amd64/bignum_cmadd.S
+		bn/arch/amd64/bignum_cmul.S
+		bn/arch/amd64/bignum_mul.S
+		bn/arch/amd64/bignum_mul_4_8_alt.S
+		bn/arch/amd64/bignum_mul_8_16_alt.S
+		bn/arch/amd64/bignum_sqr.S
+		bn/arch/amd64/bignum_sqr_4_8_alt.S
+		bn/arch/amd64/bignum_sqr_8_16_alt.S
+		bn/arch/amd64/bignum_sub.S
+		bn/arch/amd64/word_clz.S
+		bn/arch/amd64/bn_arch.c
 	)
 	add_definitions(-DAES_ASM)
 	add_definitions(-DBSAES_ASM)
@@ -231,9 +259,9 @@ set(
 	malloc-wrapper.c
 	mem_clr.c
 	mem_dbg.c
+	o_fips.c
 	o_init.c
 	o_str.c
-	o_time.c
 	aes/aes_cfb.c
 	aes/aes_ctr.c
 	aes/aes_ecb.c
@@ -242,49 +270,39 @@ set(
 	aes/aes_ofb.c
 	aes/aes_wrap.c
 	asn1/a_bitstr.c
-	asn1/a_bool.c
-	asn1/a_d2i_fp.c
-	asn1/a_digest.c
-	asn1/a_dup.c
 	asn1/a_enum.c
-	asn1/a_i2d_fp.c
 	asn1/a_int.c
 	asn1/a_mbstr.c
 	asn1/a_object.c
 	asn1/a_octet.c
+	asn1/a_pkey.c
 	asn1/a_print.c
-	asn1/a_sign.c
+	asn1/a_pubkey.c
 	asn1/a_strex.c
+	asn1/a_string.c
 	asn1/a_strnid.c
 	asn1/a_time.c
+	asn1/a_time_posix.c
 	asn1/a_time_tm.c
 	asn1/a_type.c
 	asn1/a_utf8.c
-	asn1/a_verify.c
 	asn1/ameth_lib.c
 	asn1/asn1_err.c
 	asn1/asn1_gen.c
+	asn1/asn1_item.c
 	asn1/asn1_lib.c
+	asn1/asn1_old.c
+	asn1/asn1_old_lib.c
 	asn1/asn1_par.c
+	asn1/asn1_types.c
 	asn1/asn_mime.c
 	asn1/asn_moid.c
-	asn1/asn_pack.c
 	asn1/bio_asn1.c
 	asn1/bio_ndef.c
-	asn1/d2i_pr.c
-	asn1/d2i_pu.c
-	asn1/evp_asn1.c
-	asn1/f_enum.c
-	asn1/f_int.c
-	asn1/f_string.c
-	asn1/i2d_pr.c
-	asn1/i2d_pu.c
-	asn1/n_pkey.c
 	asn1/nsseq.c
 	asn1/p5_pbe.c
 	asn1/p5_pbev2.c
 	asn1/p8_pkey.c
-	asn1/t_bitst.c
 	asn1/t_crl.c
 	asn1/t_pkey.c
 	asn1/t_req.c
@@ -306,7 +324,6 @@ set(
 	asn1/x_info.c
 	asn1/x_long.c
 	asn1/x_name.c
-	asn1/x_nx509.c
 	asn1/x_pkey.c
 	asn1/x_pubkey.c
 	asn1/x_req.c
@@ -340,17 +357,16 @@ set(
 	bio/bss_null.c
 	bio/bss_sock.c
 	bn/bn_add.c
-	bn/bn_asm.c
 	bn/bn_blind.c
+	bn/bn_bpsw.c
 	bn/bn_const.c
 	bn/bn_ctx.c
-	bn/bn_depr.c
 	bn/bn_div.c
 	bn/bn_err.c
 	bn/bn_exp.c
-	bn/bn_exp2.c
 	bn/bn_gcd.c
 	bn/bn_gf2m.c
+	bn/bn_isqrt.c
 	bn/bn_kron.c
 	bn/bn_lib.c
 	bn/bn_mod.c
@@ -363,6 +379,7 @@ set(
 	bn/bn_rand.c
 	bn/bn_recp.c
 	bn/bn_shift.c
+	bn/bn_small_primes.c
 	bn/bn_sqr.c
 	bn/bn_sqrt.c
 	bn/bn_word.c
@@ -370,6 +387,9 @@ set(
 	buffer/buf_err.c
 	buffer/buf_str.c
 	buffer/buffer.c
+	bytestring/bs_ber.c
+	bytestring/bs_cbb.c
+	bytestring/bs_cbs.c
 	camellia/cmll_cfb.c
 	camellia/cmll_ctr.c
 	camellia/cmll_ecb.c
@@ -409,6 +429,16 @@ set(
 	conf/conf_mall.c
 	conf/conf_mod.c
 	conf/conf_sap.c
+	ct/ct_b64.c
+	ct/ct_err.c
+	ct/ct_log.c
+	ct/ct_oct.c
+	ct/ct_policy.c
+	ct/ct_prn.c
+	ct/ct_sct.c
+	ct/ct_sct_ctx.c
+	ct/ct_vfy.c
+	ct/ct_x509v3.c
 	curve25519/curve25519-generic.c
 	curve25519/curve25519.c
 	des/cbc_cksm.c
@@ -454,8 +484,6 @@ set(
 	dsa/dsa_ossl.c
 	dsa/dsa_pmeth.c
 	dsa/dsa_prn.c
-	dsa/dsa_sign.c
-	dsa/dsa_vrf.c
 	dso/dso_dlfcn.c
 	dso/dso_err.c
 	dso/dso_lib.c
@@ -482,6 +510,7 @@ set(
 	ec/ecp_nist.c
 	ec/ecp_oct.c
 	ec/ecp_smpl.c
+	ec/ecx_methods.c
 	ecdh/ecdh_kdf.c
 	ecdh/ech_err.c
 	ecdh/ech_key.c
@@ -523,6 +552,7 @@ set(
 	evp/bio_enc.c
 	evp/bio_md.c
 	evp/c_all.c
+	evp/cipher_method_lib.c
 	evp/digest.c
 	evp/e_aes.c
 	evp/e_aes_cbc_hmac_sha1.c
@@ -550,9 +580,6 @@ set(
 	evp/evp_lib.c
 	evp/evp_pbe.c
 	evp/evp_pkey.c
-	evp/m_dss.c
-	evp/m_dss1.c
-	evp/m_ecdsa.c
 	evp/m_gost2814789.c
 	evp/m_gostr341194.c
 	evp/m_md4.c
@@ -601,6 +628,8 @@ set(
 	idea/i_ecb.c
 	idea/i_ofb64.c
 	idea/i_skey.c
+	kdf/hkdf_evp.c
+	kdf/kdf_err.c
 	lhash/lh_stats.c
 	lhash/lhash.c
 	md4/md4_dgst.c
@@ -636,7 +665,6 @@ set(
 	pem/pem_oth.c
 	pem/pem_pk8.c
 	pem/pem_pkey.c
-	pem/pem_seal.c
 	pem/pem_sign.c
 	pem/pem_x509.c
 	pem/pem_xaux.c
@@ -654,6 +682,7 @@ set(
 	pkcs12/p12_npas.c
 	pkcs12/p12_p8d.c
 	pkcs12/p12_p8e.c
+	pkcs12/p12_sbag.c
 	pkcs12/p12_utl.c
 	pkcs12/pk12err.c
 	pkcs7/bio_pk7.c
@@ -715,6 +744,7 @@ set(
 	txt_db/txt_db.c
 	ui/ui_err.c
 	ui/ui_lib.c
+	ui/ui_null.c
 	ui/ui_util.c
 	whrlpool/wp_dgst.c
 	x509/by_dir.c
@@ -726,9 +756,11 @@ set(
 	x509/pcy_map.c
 	x509/pcy_node.c
 	x509/pcy_tree.c
+	x509/x509_addr.c
 	x509/x509_akey.c
 	x509/x509_akeya.c
 	x509/x509_alt.c
+	x509/x509_asid.c
 	x509/x509_att.c
 	x509/x509_bcons.c
 	x509/x509_bitst.c
@@ -875,6 +907,11 @@ if(NOT HAVE_STRSEP)
 	set(EXTRA_EXPORT ${EXTRA_EXPORT} strsep)
 endif()
 
+if(NOT HAVE_STRTONUM)
+	set(CRYPTO_SRC ${CRYPTO_SRC} compat/strtonum.c)
+	set(EXTRA_EXPORT ${EXTRA_EXPORT} strtonum)
+endif()
+
 if(NOT HAVE_SYSLOG_R)
 	set(CRYPTO_SRC ${CRYPTO_SRC} compat/syslog_r.c)
 endif()
@@ -975,35 +1012,50 @@ target_include_directories(crypto_obj
 	PRIVATE
 		.
 		asn1
+		bio
 		bn
+		bytestring
+		dh
 		dsa
+		curve25519
 		ec
 		ecdh
 		ecdsa
 		evp
+		hidden
+		hmac
 		modes
+		ocsp
+		pkcs12
+		rsa
+		x509
 		../include/compat
 	PUBLIC
 		../include)
 
-add_library(crypto $<TARGET_OBJECTS:crypto_obj>)
-if (MSVC)
-	target_compile_options(crypto PRIVATE /W0 /Qspectre)
+if(HOST_AARCH64)
+	target_include_directories(crypto_obj PRIVATE bn/arch/aarch64/)
+elseif(HOST_ARM)
+	target_include_directories(crypto_obj PRIVATE bn/arch/arm/)
+elseif(HOST_I386)
+	target_include_directories(crypto_obj PRIVATE bn/arch/i386/)
+elseif(HOST_MIPS64)
+	target_include_directories(crypto_obj PRIVATE bn/arch/mips64)
+elseif(HOST_POWERPC)
+	target_include_directories(crypto_obj PRIVATE bn/arch/powerpc)
+elseif(HOST_POWERPC64)
+	target_include_directories(crypto_obj PRIVATE bn/arch/powerpc64)
+elseif(HOST_RISCV64)
+	target_include_directories(crypto_obj PRIVATE bn/arch/riscv64)
+elseif(HOST_SPARC64)
+	target_include_directories(crypto_obj PRIVATE bn/arch/sparc64)
+elseif(HOST_X86_64)
+	target_include_directories(crypto_obj PRIVATE bn/arch/amd64)
 endif()
-target_include_directories(crypto SYSTEM
-	PRIVATE
-		.
-		asn1
-		bn
-		dsa
-		ec
-		ecdh
-		ecdsa
-		evp
-		modes
-		../include/compat
-	PUBLIC
-		../include)
+
+add_library(crypto $<TARGET_OBJECTS:crypto_obj> empty.c)
+
+target_include_directories(crypto SYSTEM PUBLIC ../include)
 
 export_symbol(crypto ${CMAKE_CURRENT_BINARY_DIR}/crypto_p.sym)
 target_link_libraries(crypto ${PLATFORM_LIBS})
@@ -1024,3 +1076,10 @@ if(ENABLE_LIBRESSL_INSTALL)
 		RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 	)
 endif(ENABLE_LIBRESSL_INSTALL)
+
+# build static library for regression test
+if(BUILD_SHARED_LIBS)
+	add_library(crypto-static STATIC $<TARGET_OBJECTS:crypto_obj>)
+	target_link_libraries(crypto-static ${PLATFORM_LIBS})
+endif()
+
