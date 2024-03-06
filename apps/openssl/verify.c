@@ -1,4 +1,4 @@
-/* $OpenBSD: verify.c,v 1.16 2023/03/06 14:32:06 tb Exp $ */
+/* $OpenBSD: verify.c,v 1.18 2023/11/21 17:56:19 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -251,7 +251,7 @@ verify_usage(void)
 
 	fprintf(stderr, "\nValid purposes:\n\n");
 	for (i = 0; i < X509_PURPOSE_get_count(); i++) {
-		X509_PURPOSE *ptmp = X509_PURPOSE_get0(i);
+		const X509_PURPOSE *ptmp = X509_PURPOSE_get0(i);
 		fprintf(stderr, "  %-18s%s\n", X509_PURPOSE_get0_sname(ptmp),
 		    X509_PURPOSE_get0_name(ptmp));
 	}
@@ -427,7 +427,6 @@ cb(int ok, X509_STORE_CTX *ctx)
 		    X509_verify_cert_error_string(cert_error));
 		switch (cert_error) {
 		case X509_V_ERR_NO_EXPLICIT_POLICY:
-			policies_print(NULL, ctx);
 		case X509_V_ERR_CERT_HAS_EXPIRED:
 
 			/*
@@ -452,8 +451,6 @@ cb(int ok, X509_STORE_CTX *ctx)
 		return ok;
 
 	}
-	if (cert_error == X509_V_OK && ok == 2)
-		policies_print(NULL, ctx);
 	if (!cfg.verbose)
 		ERR_clear_error();
 	return (ok);

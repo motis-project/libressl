@@ -1,4 +1,10 @@
 OPTION	DOTNAME
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text$	SEGMENT ALIGN(64) 'CODE'
 ALIGN	16
@@ -18,6 +24,7 @@ $L$SEH_begin_rc4_md5_enc::
 	mov	r9,QWORD PTR[48+rsp]
 
 
+_CET_ENDBR
 	cmp	r9,0
 	je	$L$abort
 	push	rbx

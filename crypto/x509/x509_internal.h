@@ -1,4 +1,4 @@
-/* $OpenBSD: x509_internal.h,v 1.25 2023/01/28 19:08:09 tb Exp $ */
+/* $OpenBSD: x509_internal.h,v 1.27 2023/11/13 10:33:00 tb Exp $ */
 /*
  * Copyright (c) 2020 Bob Beck <beck@openbsd.org>
  *
@@ -96,7 +96,8 @@ int x509_vfy_callback_indicate_completion(X509_STORE_CTX *ctx);
 int x509v3_cache_extensions(X509 *x);
 X509 *x509_vfy_lookup_cert_match(X509_STORE_CTX *ctx, X509 *x);
 
-time_t x509_verify_asn1_time_to_time_t(const ASN1_TIME *atime, int notafter);
+int x509_verify_asn1_time_to_time_t(const ASN1_TIME *atime, int notafter,
+    time_t *out);
 
 struct x509_verify_ctx *x509_verify_ctx_new_from_xsc(X509_STORE_CTX *xsc);
 
@@ -111,7 +112,7 @@ struct x509_constraints_names *x509_constraints_names_new(size_t names_max);
 int x509_constraints_general_to_bytes(GENERAL_NAME *name, uint8_t **bytes,
     size_t *len);
 void x509_constraints_names_free(struct x509_constraints_names *names);
-int x509_constraints_valid_host(CBS *cbs);
+int x509_constraints_valid_host(CBS *cbs, int permit_ip);
 int x509_constraints_valid_sandns(CBS *cbs);
 int x509_constraints_domain(char *domain, size_t dlen, char *constraint,
     size_t len);
@@ -133,7 +134,7 @@ int x509_constraints_check(struct x509_constraints_names *names,
     struct x509_constraints_names *excluded, int *error);
 int x509_constraints_chain(STACK_OF(X509) *chain, int *error,
     int *depth);
-void x509_verify_cert_info_populate(X509 *cert);
+int x509_verify_cert_info_populate(X509 *cert);
 int x509_vfy_check_security_level(X509_STORE_CTX *ctx);
 
 __END_HIDDEN_DECLS

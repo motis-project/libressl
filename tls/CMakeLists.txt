@@ -56,8 +56,6 @@ else()
 	add_library(tls $<TARGET_OBJECTS:tls_obj> $<TARGET_OBJECTS:tls_compat_obj> empty.c)
 endif()
 
-target_include_directories(tls SYSTEM PUBLIC ../include)
-
 export_symbol(tls ${CMAKE_CURRENT_BINARY_DIR}/tls.sym)
 target_link_libraries(tls ${OPENSSL_LIBS})
 if (WIN32)

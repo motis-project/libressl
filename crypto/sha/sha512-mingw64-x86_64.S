@@ -1,3 +1,9 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text	
 
@@ -14,6 +20,7 @@ sha512_block_data_order:
 	movq	%r8,%rdx
 	movq	%r9,%rcx
 
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12

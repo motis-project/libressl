@@ -1,4 +1,4 @@
-/*	$OpenBSD: ecx_methods.c,v 1.5 2023/03/15 06:34:07 tb Exp $ */
+/*	$OpenBSD: ecx_methods.c,v 1.11 2024/01/04 17:01:26 tb Exp $ */
 /*
  * Copyright (c) 2022 Joel Sing <jsing@openbsd.org>
  *
@@ -27,6 +27,7 @@
 #include "bytestring.h"
 #include "curve25519_internal.h"
 #include "evp_local.h"
+#include "x509_local.h"
 
 /*
  * EVP PKEY and PKEY ASN.1 methods Ed25519 and X25519.
@@ -292,6 +293,42 @@ ecx_pub_cmp(const EVP_PKEY *pkey1, const EVP_PKEY *pkey2)
 	    pkey1->pkey.ecx->pub_key_len) == 0;
 }
 
+/* Reimplementation of ASN1_buf_print() that adds a secondary indent of 4. */
+static int
+ecx_buf_print(BIO *bio, const uint8_t *buf, size_t buf_len, int indent)
+{
+	uint8_t u8;
+	size_t octets = 0;
+	const char *sep = ":", *nl = "";
+	CBS cbs;
+
+	if (indent > 60)
+		indent = 60;
+	indent += 4;
+	if (indent < 0)
+		indent = 0;
+
+	CBS_init(&cbs, buf, buf_len);
+	while (CBS_len(&cbs) > 0) {
+		if (!CBS_get_u8(&cbs, &u8))
+			return 0;
+		if (octets++ % 15 == 0) {
+			if (BIO_printf(bio, "%s%*s", nl, indent, "") < 0)
+				return 0;
+			nl = "\n";
+		}
+		if (CBS_len(&cbs) == 0)
+			sep = "";
+		if (BIO_printf(bio, "%02x%s", u8, sep) <= 0)
+			return 0;
+	}
+
+	if (BIO_printf(bio, "\n") <= 0)
+		return 0;
+
+	return 1;
+}
+
 static int
 ecx_pub_print(BIO *bio, const EVP_PKEY *pkey, int indent, ASN1_PCTX *ctx)
 {
@@ -309,8 +346,7 @@ ecx_pub_print(BIO *bio, const EVP_PKEY *pkey, int indent, ASN1_PCTX *ctx)
 		return 0;
 	if (BIO_printf(bio, "%*spub:\n", indent, "") <= 0)
 		return 0;
-	if (ASN1_buf_print(bio, ecx_key->pub_key, ecx_key->pub_key_len,
-	    indent + 4) == 0)
+	if (!ecx_buf_print(bio, ecx_key->pub_key, ecx_key->pub_key_len, indent))
 		return 0;
 
 	return 1;
@@ -422,13 +458,11 @@ ecx_priv_print(BIO *bio, const EVP_PKEY *pkey, int indent, ASN1_PCTX *ctx)
 		return 0;
 	if (BIO_printf(bio, "%*spriv:\n", indent, "") <= 0)
 		return 0;
-	if (ASN1_buf_print(bio, ecx_key->priv_key, ecx_key->priv_key_len,
-	    indent + 4) == 0)
+	if (!ecx_buf_print(bio, ecx_key->priv_key, ecx_key->priv_key_len, indent))
 		return 0;
 	if (BIO_printf(bio, "%*spub:\n", indent, "") <= 0)
 		return 0;
-	if (ASN1_buf_print(bio, ecx_key->pub_key, ecx_key->pub_key_len,
-	    indent + 4) == 0)
+	if (!ecx_buf_print(bio, ecx_key->pub_key, ecx_key->pub_key_len, indent))
 		return 0;
 
 	return 1;
@@ -486,7 +520,7 @@ ecx_free(EVP_PKEY *pkey)
 {
 	struct ecx_key_st *ecx_key = pkey->pkey.ecx;
 
-	return ecx_key_free(ecx_key);
+	ecx_key_free(ecx_key);
 }
 
 static int
@@ -683,11 +717,11 @@ ecx_item_verify(EVP_MD_CTX *md_ctx, const ASN1_ITEM *it, void *asn,
 
 	if (nid != NID_ED25519 || param_type != V_ASN1_UNDEF) {
 		ECerror(EC_R_INVALID_ENCODING);
-		return 0;
+		return -1;
 	}
 
 	if (!EVP_DigestVerifyInit(md_ctx, NULL, NULL, NULL, pkey))
-		return 0;
+		return -1;
 
 	return 2;
 }
@@ -696,16 +730,12 @@ static int
 ecx_item_sign(EVP_MD_CTX *md_ctx, const ASN1_ITEM *it, void *asn,
     X509_ALGOR *algor1, X509_ALGOR *algor2, ASN1_BIT_STRING *abs)
 {
-	ASN1_OBJECT *aobj;
-
-	if ((aobj = OBJ_nid2obj(NID_ED25519)) == NULL)
-		return 0;
-
-	if (!X509_ALGOR_set0(algor1, aobj, V_ASN1_UNDEF, NULL))
+	if (!X509_ALGOR_set0_by_nid(algor1, NID_ED25519, V_ASN1_UNDEF, NULL))
 		return 0;
 
 	if (algor2 != NULL) {
-		if (!X509_ALGOR_set0(algor2, aobj, V_ASN1_UNDEF, NULL))
+		if (!X509_ALGOR_set0_by_nid(algor2, NID_ED25519, V_ASN1_UNDEF,
+		    NULL))
 			return 0;
 	}
 
@@ -757,9 +787,9 @@ pkey_ecx_digestverify(EVP_MD_CTX *md_ctx, const unsigned char *sig,
 	ecx_key = pkey_ctx->pkey->pkey.ecx;
 
 	if (ecx_key == NULL || ecx_key->pub_key == NULL)
-		return 0;
+		return -1;
 	if (sig_len != ecx_sig_size(pkey_ctx->pkey))
-		return 0;
+		return -1;
 
 	return ED25519_verify(message, message_len, sig, ecx_key->pub_key);
 }
@@ -783,8 +813,8 @@ pkey_ecx_ed_ctrl(EVP_PKEY_CTX *pkey_ctx, int op, int arg1, void *arg2)
 }
 
 const EVP_PKEY_ASN1_METHOD x25519_asn1_meth = {
+	.base_method = &x25519_asn1_meth,
 	.pkey_id = EVP_PKEY_X25519,
-	.pkey_base_id = EVP_PKEY_X25519,
 	.pkey_flags = 0,
 	.pem_str = "X25519",
 	.info = "OpenSSL X25519 algorithm",
@@ -821,8 +851,8 @@ const EVP_PKEY_METHOD x25519_pkey_meth = {
 };
 
 const EVP_PKEY_ASN1_METHOD ed25519_asn1_meth = {
+	.base_method = &ed25519_asn1_meth,
 	.pkey_id = EVP_PKEY_ED25519,
-	.pkey_base_id = EVP_PKEY_ED25519,
 	.pkey_flags = 0,
 	.pem_str = "ED25519",
 	.info = "OpenSSL ED25519 algorithm",

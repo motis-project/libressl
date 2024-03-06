@@ -1,9 +1,16 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 
 .text	
 .type	_x86_64_AES_encrypt,@function
 .align	16
 _x86_64_AES_encrypt:
+_CET_ENDBR
 	xorl	0(%r15),%eax
 	xorl	4(%r15),%ebx
 	xorl	8(%r15),%ecx
@@ -157,6 +164,7 @@ _x86_64_AES_encrypt:
 .type	_x86_64_AES_encrypt_compact,@function
 .align	16
 _x86_64_AES_encrypt_compact:
+_CET_ENDBR
 	leaq	128(%r14),%r8
 	movl	0-128(%r8),%edi
 	movl	32-128(%r8),%ebp
@@ -336,6 +344,7 @@ _x86_64_AES_encrypt_compact:
 .hidden	asm_AES_encrypt
 asm_AES_encrypt:
 AES_encrypt:
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -399,6 +408,7 @@ AES_encrypt:
 .type	_x86_64_AES_decrypt,@function
 .align	16
 _x86_64_AES_decrypt:
+_CET_ENDBR
 	xorl	0(%r15),%eax
 	xorl	4(%r15),%ebx
 	xorl	8(%r15),%ecx
@@ -554,6 +564,7 @@ _x86_64_AES_decrypt:
 .type	_x86_64_AES_decrypt_compact,@function
 .align	16
 _x86_64_AES_decrypt_compact:
+_CET_ENDBR
 	leaq	128(%r14),%r8
 	movl	0-128(%r8),%edi
 	movl	32-128(%r8),%ebp
@@ -784,6 +795,7 @@ _x86_64_AES_decrypt_compact:
 .hidden	asm_AES_decrypt
 asm_AES_decrypt:
 AES_decrypt:
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -850,6 +862,7 @@ AES_decrypt:
 .type	AES_set_encrypt_key,@function
 .align	16
 AES_set_encrypt_key:
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -875,6 +888,7 @@ AES_set_encrypt_key:
 .type	_x86_64_AES_set_encrypt_key,@function
 .align	16
 _x86_64_AES_set_encrypt_key:
+_CET_ENDBR
 	movl	%esi,%ecx
 	movq	%rdi,%rsi
 	movq	%rdx,%rdi
@@ -1115,6 +1129,7 @@ _x86_64_AES_set_encrypt_key:
 .type	AES_set_decrypt_key,@function
 .align	16
 AES_set_decrypt_key:
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -1307,6 +1322,7 @@ AES_set_decrypt_key:
 .hidden	asm_AES_cbc_encrypt
 asm_AES_cbc_encrypt:
 AES_cbc_encrypt:
+_CET_ENDBR
 	cmpq	$0,%rdx
 	je	.Lcbc_epilogue
 	pushfq

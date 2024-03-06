@@ -1,9 +1,16 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 
 .text	
 .def	_x86_64_AES_encrypt;	.scl 3;	.type 32;	.endef
 .p2align	4
 _x86_64_AES_encrypt:
+_CET_ENDBR
 	xorl	0(%r15),%eax
 	xorl	4(%r15),%ebx
 	xorl	8(%r15),%ecx
@@ -157,6 +164,7 @@ _x86_64_AES_encrypt:
 .def	_x86_64_AES_encrypt_compact;	.scl 3;	.type 32;	.endef
 .p2align	4
 _x86_64_AES_encrypt_compact:
+_CET_ENDBR
 	leaq	128(%r14),%r8
 	movl	0-128(%r8),%edi
 	movl	32-128(%r8),%ebp
@@ -344,6 +352,7 @@ AES_encrypt:
 	movq	%rdx,%rsi
 	movq	%r8,%rdx
 
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -409,6 +418,7 @@ AES_encrypt:
 .def	_x86_64_AES_decrypt;	.scl 3;	.type 32;	.endef
 .p2align	4
 _x86_64_AES_decrypt:
+_CET_ENDBR
 	xorl	0(%r15),%eax
 	xorl	4(%r15),%ebx
 	xorl	8(%r15),%ecx
@@ -564,6 +574,7 @@ _x86_64_AES_decrypt:
 .def	_x86_64_AES_decrypt_compact;	.scl 3;	.type 32;	.endef
 .p2align	4
 _x86_64_AES_decrypt_compact:
+_CET_ENDBR
 	leaq	128(%r14),%r8
 	movl	0-128(%r8),%edi
 	movl	32-128(%r8),%ebp
@@ -802,6 +813,7 @@ AES_decrypt:
 	movq	%rdx,%rsi
 	movq	%r8,%rdx
 
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -878,6 +890,7 @@ AES_set_encrypt_key:
 	movq	%rdx,%rsi
 	movq	%r8,%rdx
 
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -905,6 +918,7 @@ AES_set_encrypt_key:
 .def	_x86_64_AES_set_encrypt_key;	.scl 3;	.type 32;	.endef
 .p2align	4
 _x86_64_AES_set_encrypt_key:
+_CET_ENDBR
 	movl	%esi,%ecx
 	movq	%rdi,%rsi
 	movq	%rdx,%rdi
@@ -1153,6 +1167,7 @@ AES_set_decrypt_key:
 	movq	%rdx,%rsi
 	movq	%r8,%rdx
 
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -1358,6 +1373,7 @@ AES_cbc_encrypt:
 	movq	40(%rsp),%r8
 	movq	48(%rsp),%r9
 
+_CET_ENDBR
 	cmpq	$0,%rdx
 	je	.Lcbc_epilogue
 	pushfq
@@ -2600,6 +2616,7 @@ AES_cbc_encrypt:
 .def	block_se_handler;	.scl 3;	.type 32;	.endef
 .p2align	4
 block_se_handler:
+_CET_ENDBR
 	pushq	%rsi
 	pushq	%rdi
 	pushq	%rbx
@@ -2658,6 +2675,7 @@ block_se_handler:
 .def	key_se_handler;	.scl 3;	.type 32;	.endef
 .p2align	4
 key_se_handler:
+_CET_ENDBR
 	pushq	%rsi
 	pushq	%rdi
 	pushq	%rbx
@@ -2715,6 +2733,7 @@ key_se_handler:
 .def	cbc_se_handler;	.scl 3;	.type 32;	.endef
 .p2align	4
 cbc_se_handler:
+_CET_ENDBR
 	pushq	%rsi
 	pushq	%rdi
 	pushq	%rbx
