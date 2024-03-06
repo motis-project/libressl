@@ -1,4 +1,10 @@
 OPTION	DOTNAME
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text$	SEGMENT ALIGN(64) 'CODE'
 ALIGN	16
@@ -15,6 +21,7 @@ $L$SEH_begin_md5_block_asm_data_order::
 	mov	rdx,r8
 
 
+_CET_ENDBR
 	push	rbp
 	push	rbx
 	push	r12

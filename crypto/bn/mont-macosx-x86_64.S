@@ -1,3 +1,9 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text	
 
@@ -5,6 +11,7 @@
 
 .p2align	4
 _bn_mul_mont:
+_CET_ENDBR
 	testl	$3,%r9d
 	jnz	L$mul_enter
 	cmpl	$8,%r9d
@@ -212,6 +219,7 @@ L$mul_epilogue:
 .p2align	4
 bn_mul4x_mont:
 L$mul4x_enter:
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -610,6 +618,7 @@ L$mul4x_epilogue:
 .p2align	4
 bn_sqr4x_mont:
 L$sqr4x_enter:
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12

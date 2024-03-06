@@ -1,3 +1,9 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text	
 
@@ -7,6 +13,7 @@
 .type	_bsaes_encrypt8,@function
 .align	64
 _bsaes_encrypt8:
+_CET_ENDBR
 	leaq	.LBS0(%rip),%r11
 
 	movdqa	(%rax),%xmm8
@@ -479,6 +486,7 @@ _bsaes_encrypt8_bitslice:
 .type	_bsaes_decrypt8,@function
 .align	64
 _bsaes_decrypt8:
+_CET_ENDBR
 	leaq	.LBS0(%rip),%r11
 
 	movdqa	(%rax),%xmm8
@@ -984,6 +992,7 @@ _bsaes_decrypt8:
 .type	_bsaes_key_convert,@function
 .align	16
 _bsaes_key_convert:
+_CET_ENDBR
 	leaq	.Lmasks(%rip),%r11
 	movdqu	(%rcx),%xmm7
 	leaq	16(%rcx),%rcx
@@ -1068,6 +1077,7 @@ _bsaes_key_convert:
 .type	bsaes_cbc_encrypt,@function
 .align	16
 bsaes_cbc_encrypt:
+_CET_ENDBR
 	cmpl	$0,%r9d
 	jne	asm_AES_cbc_encrypt
 	cmpq	$128,%rdx
@@ -1318,6 +1328,7 @@ bsaes_cbc_encrypt:
 .type	bsaes_ctr32_encrypt_blocks,@function
 .align	16
 bsaes_ctr32_encrypt_blocks:
+_CET_ENDBR
 	movq	%rsp,%rax
 .Lctr_enc_prologue:
 	pushq	%rbp
@@ -1517,6 +1528,7 @@ bsaes_ctr32_encrypt_blocks:
 .type	bsaes_xts_encrypt,@function
 .align	16
 bsaes_xts_encrypt:
+_CET_ENDBR
 	movq	%rsp,%rax
 .Lxts_enc_prologue:
 	pushq	%rbp
@@ -1969,6 +1981,7 @@ bsaes_xts_encrypt:
 .type	bsaes_xts_decrypt,@function
 .align	16
 bsaes_xts_decrypt:
+_CET_ENDBR
 	movq	%rsp,%rax
 .Lxts_dec_prologue:
 	pushq	%rbp

@@ -1,4 +1,10 @@
 OPTION	DOTNAME
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text$	SEGMENT ALIGN(64) 'CODE'
 EXTERN	OPENSSL_ia32cap_P:NEAR
@@ -17,6 +23,8 @@ $L$SEH_begin_RC4::
 	mov	rdx,r8
 	mov	rcx,r9
 
+
+_CET_ENDBR
 	or	rsi,rsi
 	jne	$L$entry
 	mov	rdi,QWORD PTR[8+rsp]	;WIN64 epilogue
@@ -548,6 +556,7 @@ $L$SEH_begin_RC4_set_key::
 	mov	rdx,r8
 
 
+_CET_ENDBR
 	lea	rdi,QWORD PTR[8+rdi]
 	lea	rdx,QWORD PTR[rsi*1+rdx]
 	neg	rsi
@@ -618,34 +627,6 @@ $L$exit_key::
 	DB	0F3h,0C3h		;repret
 $L$SEH_end_RC4_set_key::
 RC4_set_key	ENDP
-
-PUBLIC	RC4_options
-
-ALIGN	16
-RC4_options	PROC PUBLIC
-	lea	rax,QWORD PTR[$L$opts]
-	mov	edx,DWORD PTR[OPENSSL_ia32cap_P]
-	bt	edx,IA32CAP_BIT0_INTELP4
-	jc	$L$8xchar
-	bt	edx,IA32CAP_BIT0_INTEL
-	jnc	$L$done
-	add	rax,25
-	DB	0F3h,0C3h		;repret
-$L$8xchar::
-	add	rax,12
-$L$done::
-	DB	0F3h,0C3h		;repret
-ALIGN	64
-$L$opts::
-DB	114,99,52,40,56,120,44,105,110,116,41,0
-DB	114,99,52,40,56,120,44,99,104,97,114,41,0
-DB	114,99,52,40,49,54,120,44,105,110,116,41,0
-DB	82,67,52,32,102,111,114,32,120,56,54,95,54,52,44,32
-DB	67,82,89,80,84,79,71,65,77,83,32,98,121,32,60,97
-DB	112,112,114,111,64,111,112,101,110,115,115,108,46,111,114,103
-DB	62,0
-ALIGN	64
-RC4_options	ENDP
 
 .text$	ENDS
 END

@@ -1,4 +1,4 @@
-/* $OpenBSD: e_aes.c,v 1.51 2023/03/01 11:16:06 tb Exp $ */
+/* $OpenBSD: e_aes.c,v 1.56 2024/01/04 17:38:36 tb Exp $ */
 /* ====================================================================
  * Copyright (c) 2001-2011 The OpenSSL Project.  All rights reserved.
  *
@@ -1305,7 +1305,11 @@ aes_gcm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
 		gctx->tls_aad_len = -1;
 		return 1;
 
-	case EVP_CTRL_GCM_SET_IVLEN:
+	case EVP_CTRL_AEAD_GET_IVLEN:
+		*(int *)ptr = gctx->ivlen;
+		return 1;
+
+	case EVP_CTRL_AEAD_SET_IVLEN:
 		if (arg <= 0)
 			return 0;
 		/* Allocate memory for IV if needed */
@@ -1631,6 +1635,7 @@ aes_gcm_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 
 #define CUSTOM_FLAGS \
     ( EVP_CIPH_FLAG_DEFAULT_ASN1 | EVP_CIPH_CUSTOM_IV | \
+      EVP_CIPH_FLAG_CUSTOM_IV_LENGTH | \
       EVP_CIPH_FLAG_CUSTOM_CIPHER | EVP_CIPH_ALWAYS_CALL_INIT | \
       EVP_CIPH_CTRL_INIT | EVP_CIPH_CUSTOM_COPY )
 
@@ -1968,7 +1973,11 @@ aes_ccm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
 		cctx->len_set = 0;
 		return 1;
 
-	case EVP_CTRL_CCM_SET_IVLEN:
+	case EVP_CTRL_AEAD_GET_IVLEN:
+		*(int *)ptr = 15 - cctx->L;
+		return 1;
+
+	case EVP_CTRL_AEAD_SET_IVLEN:
 		arg = 15 - arg;
 
 	case EVP_CTRL_CCM_SET_L:
@@ -2451,7 +2460,11 @@ aes_wrap_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
 	}
 
 	if (iv != NULL) {
-		memcpy(ctx->iv, iv, EVP_CIPHER_CTX_iv_length(ctx));
+		int iv_len = EVP_CIPHER_CTX_iv_length(ctx);
+
+		if (iv_len < 0 || iv_len > sizeof(ctx->iv))
+			return 0;
+		memcpy(ctx->iv, iv, iv_len);
 		wctx->iv = ctx->iv;
 	}
 
@@ -2537,7 +2550,6 @@ static const EVP_CIPHER aes_128_wrap = {
 	.set_asn1_parameters = NULL,
 	.get_asn1_parameters = NULL,
 	.ctrl = aes_wrap_ctrl,
-	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -2559,7 +2571,6 @@ static const EVP_CIPHER aes_192_wrap = {
 	.set_asn1_parameters = NULL,
 	.get_asn1_parameters = NULL,
 	.ctrl = aes_wrap_ctrl,
-	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -2581,7 +2592,6 @@ static const EVP_CIPHER aes_256_wrap = {
 	.set_asn1_parameters = NULL,
 	.get_asn1_parameters = NULL,
 	.ctrl = aes_wrap_ctrl,
-	.app_data = NULL,
 };
 
 const EVP_CIPHER *

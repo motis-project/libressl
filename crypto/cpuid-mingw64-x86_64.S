@@ -1,7 +1,14 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 
 
 .section	.ctors
+_CET_ENDBR
 	.p2align	3
 	.quad	OPENSSL_cpuid_setup
 
@@ -14,6 +21,7 @@
 .def	OPENSSL_ia32_cpuid;	.scl 2;	.type 32;	.endef
 .p2align	4
 OPENSSL_ia32_cpuid:
+_CET_ENDBR
 	movq	%rbx,%r8
 
 	xorl	%eax,%eax
@@ -51,6 +59,7 @@ OPENSSL_ia32_cpuid:
 	movl	%eax,%r10d
 	movl	$2147483649,%eax
 	cpuid
+	orl	%ecx,%r9d
 	andl	$IA32CAP_MASK1_AMD_XOP,%r9d
 	orl	$1,%r9d
 

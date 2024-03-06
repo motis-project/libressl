@@ -1,3 +1,9 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text	
 
@@ -16,6 +22,7 @@ bn_mul_mont_gather5:
 	movq	40(%rsp),%r8
 	movq	48(%rsp),%r9
 
+_CET_ENDBR
 	testl	$3,%r9d
 	jnz	.Lmul_enter
 	cmpl	$8,%r9d
@@ -424,6 +431,7 @@ bn_mul4x_mont_gather5:
 	movq	40(%rsp),%r8
 	movq	48(%rsp),%r9
 
+_CET_ENDBR
 .Lmul4x_enter:
 	movl	%r9d,%r9d
 	movd	56(%rsp),%xmm5
@@ -1016,6 +1024,7 @@ bn_mul4x_mont_gather5:
 .def	bn_scatter5;	.scl 2;	.type 32;	.endef
 .p2align	4
 bn_scatter5:
+_CET_ENDBR
 	cmpq	$0,%rdx
 	jz	.Lscatter_epilogue
 	leaq	(%r8,%r9,8),%r8
@@ -1034,6 +1043,7 @@ bn_scatter5:
 .def	bn_gather5;	.scl 2;	.type 32;	.endef
 .p2align	4
 bn_gather5:
+_CET_ENDBR
 .LSEH_begin_bn_gather5:
 
 .byte	0x4c,0x8d,0x14,0x24			
@@ -1193,15 +1203,17 @@ bn_gather5:
 	retq
 .LSEH_end_bn_gather5:
 
+.section	.rodata
 .p2align	6
 .Linc:
 .long	0,0, 1,1
 .long	2,2, 2,2
-.byte	77,111,110,116,103,111,109,101,114,121,32,77,117,108,116,105,112,108,105,99,97,116,105,111,110,32,119,105,116,104,32,115,99,97,116,116,101,114,47,103,97,116,104,101,114,32,102,111,114,32,120,56,54,95,54,52,44,32,67,82,89,80,84,79,71,65,77,83,32,98,121,32,60,97,112,112,114,111,64,111,112,101,110,115,115,108,46,111,114,103,62,0
+.text	
 
 .def	mul_handler;	.scl 3;	.type 32;	.endef
 .p2align	4
 mul_handler:
+_CET_ENDBR
 	pushq	%rsi
 	pushq	%rdi
 	pushq	%rbx

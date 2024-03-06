@@ -1,3 +1,9 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text	
 
@@ -15,6 +21,7 @@ sha1_block_data_order:
 	movq	%rdx,%rsi
 	movq	%r8,%rdx
 
+_CET_ENDBR
 	movl	OPENSSL_ia32cap_P+0(%rip),%r9d
 	movl	OPENSSL_ia32cap_P+4(%rip),%r8d
 	testl	$IA32CAP_MASK1_SSSE3,%r8d
@@ -1312,6 +1319,7 @@ sha1_block_data_order_ssse3:
 	movq	%r8,%rdx
 
 _ssse3_shortcut:
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -2522,6 +2530,7 @@ K_XX_XX:
 .def	se_handler;	.scl 3;	.type 32;	.endef
 .p2align	4
 se_handler:
+_CET_ENDBR
 	pushq	%rsi
 	pushq	%rdi
 	pushq	%rbx

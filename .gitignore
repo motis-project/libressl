@@ -1,1 +1,4 @@
 /*build*
+
+/openbsd
+/include/openssl/opensslconf.h

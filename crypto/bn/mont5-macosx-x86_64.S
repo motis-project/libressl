@@ -1,3 +1,9 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text	
 
@@ -5,6 +11,7 @@
 
 .p2align	6
 _bn_mul_mont_gather5:
+_CET_ENDBR
 	testl	$3,%r9d
 	jnz	L$mul_enter
 	cmpl	$8,%r9d
@@ -400,6 +407,7 @@ L$mul_epilogue:
 
 .p2align	4
 bn_mul4x_mont_gather5:
+_CET_ENDBR
 L$mul4x_enter:
 	movl	%r9d,%r9d
 	movd	8(%rsp),%xmm5
@@ -990,6 +998,7 @@ L$mul4x_epilogue:
 
 .p2align	4
 _bn_scatter5:
+_CET_ENDBR
 	cmpq	$0,%rsi
 	jz	L$scatter_epilogue
 	leaq	(%rdx,%rcx,8),%rdx
@@ -1008,6 +1017,7 @@ L$scatter_epilogue:
 
 .p2align	4
 _bn_gather5:
+_CET_ENDBR
 L$SEH_begin_bn_gather5:
 
 .byte	0x4c,0x8d,0x14,0x24			

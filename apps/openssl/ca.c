@@ -1,4 +1,4 @@
-/* $OpenBSD: ca.c,v 1.55 2023/03/06 14:32:05 tb Exp $ */
+/* $OpenBSD: ca.c,v 1.58 2024/02/04 13:08:29 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -607,26 +607,6 @@ static const struct option ca_options[] = {
 	{ NULL },
 };
 
-/*
- * Set a certificate time based on user provided input. Make sure
- * what we put in the certificate is legit for RFC 5280. Returns
- * 0 on success, -1 on an invalid time string. Strings must be
- * YYYYMMDDHHMMSSZ for post 2050 dates. YYYYMMDDHHMMSSZ or
- * YYMMDDHHMMSSZ is accepted for pre 2050 dates, and fixed up to
- * be the correct format in the certificate.
- */
-static int
-setCertificateTime(ASN1_TIME *x509time, char *timestring)
-{
-	struct tm tm1;
-
-	if (ASN1_time_parse(timestring, strlen(timestring), &tm1, 0) == -1)
-		return (-1);
-	if (!ASN1_TIME_set_tm(x509time, &tm1))
-		return (-1);
-	return 0;
-}
-
 static void
 ca_usage(void)
 {
@@ -654,7 +634,6 @@ ca_main(int argc, char **argv)
 	int free_key = 0;
 	int total = 0;
 	int total_done = 0;
-	int ret = 1;
 	long errorline = -1;
 	EVP_PKEY *pkey = NULL;
 	int output_der = 0;
@@ -684,6 +663,8 @@ ca_main(int argc, char **argv)
 	STACK_OF(X509) *cert_sk = NULL;
 	char *tofree = NULL;
 	DB_ATTR db_attr;
+	int default_nid, rv;
+	int ret = 1;
 
 	if (pledge("stdio cpath wpath rpath tty", NULL) == -1) {
 		perror("pledge");
@@ -1050,26 +1031,34 @@ ca_main(int argc, char **argv)
 			BIO_set_fp(Sout, stdout, BIO_NOCLOSE | BIO_FP_TEXT);
 		}
 	}
-	if ((cfg.md == NULL) &&
-	    ((cfg.md = NCONF_get_string(conf, cfg.section,
-	    ENV_DEFAULT_MD)) == NULL)) {
-		lookup_fail(cfg.section, ENV_DEFAULT_MD);
-		goto err;
-	}
-	if (strcmp(cfg.md, "default") == 0) {
-		int def_nid;
-		if (EVP_PKEY_get_default_digest_nid(pkey, &def_nid) <= 0) {
-			BIO_puts(bio_err, "no default digest\n");
+
+	rv = EVP_PKEY_get_default_digest_nid(pkey, &default_nid);
+	if (rv == 2 && default_nid == NID_undef) {
+		/* The digest is required to be EVP_md_null() (EdDSA). */
+		dgst = EVP_md_null();
+	} else {
+		/* Ignore rv unless we need a valid default_nid. */
+		if (cfg.md == NULL)
+			cfg.md = NCONF_get_string(conf, cfg.section,
+			    ENV_DEFAULT_MD);
+		if (cfg.md == NULL) {
+			lookup_fail(cfg.section, ENV_DEFAULT_MD);
 			goto err;
 		}
-		cfg.md = (char *) OBJ_nid2sn(def_nid);
+		if (strcmp(cfg.md, "default") == 0) {
+			if (rv <= 0) {
+				BIO_puts(bio_err, "no default digest\n");
+				goto err;
+			}
+			cfg.md = (char *)OBJ_nid2sn(default_nid);
+		}
 		if (cfg.md == NULL)
 			goto err;
-	}
-	if ((dgst = EVP_get_digestbyname(cfg.md)) == NULL) {
-		BIO_printf(bio_err,
-		    "%s is an unsupported message digest type\n", cfg.md);
-		goto err;
+		if ((dgst = EVP_get_digestbyname(cfg.md)) == NULL) {
+			BIO_printf(bio_err, "%s is an unsupported "
+			    "message digest type\n", cfg.md);
+			goto err;
+		}
 	}
 	if (cfg.req) {
 		if ((cfg.email_dn == 1) &&
@@ -1976,7 +1965,7 @@ do_body(X509 **xret, EVP_PKEY *pkey, X509 *x509, const EVP_MD *dgst,
 	if (strcmp(startdate, "today") == 0) {
 		if (X509_gmtime_adj(X509_get_notBefore(ret), 0) == NULL)
 			goto err;
-	} else if (setCertificateTime(X509_get_notBefore(ret), startdate) == -1) {
+	} else if (!ASN1_TIME_set_string_X509(X509_get_notBefore(ret), startdate)) {
 		BIO_printf(bio_err, "Invalid start date %s\n", startdate);
 		goto err;
 	}
@@ -1985,7 +1974,7 @@ do_body(X509 **xret, EVP_PKEY *pkey, X509 *x509, const EVP_MD *dgst,
 		if (X509_time_adj_ex(X509_get_notAfter(ret), days, 0,
 		    NULL) == NULL)
 			goto err;
-	} else if (setCertificateTime(X509_get_notAfter(ret), enddate) == -1) {
+	} else if (!ASN1_TIME_set_string_X509(X509_get_notAfter(ret), enddate)) {
 		BIO_printf(bio_err, "Invalid end date %s\n", enddate);
 		goto err;
 	}
@@ -2587,7 +2576,6 @@ get_certificate_status(const char *serial, CA_DB *db)
 		goto err;
 	}
 	if (strlen(serial) % 2) {
-		/* Set the first char to 0 */ ;
 		row[DB_serial][0] = '0';
 
 		/* Copy String from serial to row[DB_serial] */

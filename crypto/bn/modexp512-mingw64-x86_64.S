@@ -1,9 +1,16 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text	
 
 .def	MULADD_128x512;	.scl 3;	.type 32;	.endef
 .p2align	4
 MULADD_128x512:
+_CET_ENDBR
 	movq	0(%rsi),%rax
 	mulq	%rbp
 	addq	%rax,%r8
@@ -134,6 +141,7 @@ MULADD_128x512:
 .def	mont_reduce;	.scl 3;	.type 32;	.endef
 .p2align	4
 mont_reduce:
+_CET_ENDBR
 	leaq	192(%rsp),%rdi
 	movq	32(%rsp),%rsi
 	addq	$576,%rsi
@@ -577,6 +585,7 @@ mont_reduce:
 .def	mont_mul_a3b;	.scl 3;	.type 32;	.endef
 .p2align	4
 mont_mul_a3b:
+_CET_ENDBR
 
 
 
@@ -1083,6 +1092,7 @@ mont_mul_a3b:
 .def	sqr_reduce;	.scl 3;	.type 32;	.endef
 .p2align	4
 sqr_reduce:
+_CET_ENDBR
 	movq	16(%rsp),%rcx
 
 
@@ -1475,6 +1485,7 @@ mod_exp_512:
 	movq	%r8,%rdx
 	movq	%r9,%rcx
 
+_CET_ENDBR
 	pushq	%rbp
 	pushq	%rbx
 	pushq	%r12

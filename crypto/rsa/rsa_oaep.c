@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_oaep.c,v 1.36 2022/11/26 16:08:54 tb Exp $ */
+/* $OpenBSD: rsa_oaep.c,v 1.38 2024/02/18 15:45:42 tb Exp $ */
 /*
  * Copyright 1999-2018 The OpenSSL Project Authors. All Rights Reserved.
  *
@@ -90,6 +90,7 @@ RSA_padding_add_PKCS1_OAEP(unsigned char *to, int tlen,
 	return RSA_padding_add_PKCS1_OAEP_mgf1(to, tlen, from, flen, param,
 	    plen, NULL, NULL);
 }
+LCRYPTO_ALIAS(RSA_padding_add_PKCS1_OAEP);
 
 int
 RSA_padding_add_PKCS1_OAEP_mgf1(unsigned char *to, int tlen,
@@ -156,6 +157,7 @@ RSA_padding_add_PKCS1_OAEP_mgf1(unsigned char *to, int tlen,
 
 	return rv;
 }
+LCRYPTO_ALIAS(RSA_padding_add_PKCS1_OAEP_mgf1);
 
 int
 RSA_padding_check_PKCS1_OAEP(unsigned char *to, int tlen,
@@ -165,6 +167,7 @@ RSA_padding_check_PKCS1_OAEP(unsigned char *to, int tlen,
 	return RSA_padding_check_PKCS1_OAEP_mgf1(to, tlen, from, flen, num,
 	    param, plen, NULL, NULL);
 }
+LCRYPTO_ALIAS(RSA_padding_check_PKCS1_OAEP);
 
 int
 RSA_padding_check_PKCS1_OAEP_mgf1(unsigned char *to, int tlen,
@@ -315,6 +318,7 @@ RSA_padding_check_PKCS1_OAEP_mgf1(unsigned char *to, int tlen,
 
 	return constant_time_select_int(good, mlen, -1);
 }
+LCRYPTO_ALIAS(RSA_padding_check_PKCS1_OAEP_mgf1);
 
 int
 PKCS1_MGF1(unsigned char *mask, long len, const unsigned char *seed,
@@ -327,7 +331,7 @@ PKCS1_MGF1(unsigned char *mask, long len, const unsigned char *seed,
 	int mdlen;
 	int rv = -1;
 
-	EVP_MD_CTX_init(&c);
+	EVP_MD_CTX_legacy_clear(&c);
 	mdlen = EVP_MD_size(dgst);
 	if (mdlen < 0)
 		goto err;
@@ -356,3 +360,4 @@ PKCS1_MGF1(unsigned char *mask, long len, const unsigned char *seed,
 	EVP_MD_CTX_cleanup(&c);
 	return rv;
 }
+LCRYPTO_ALIAS(PKCS1_MGF1);

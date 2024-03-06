@@ -1,3 +1,9 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text	
 
@@ -12,6 +18,7 @@ gcm_gmult_4bit:
 	movq	%rcx,%rdi
 	movq	%rdx,%rsi
 
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -111,6 +118,7 @@ gcm_ghash_4bit:
 	movq	%r8,%rdx
 	movq	%r9,%rcx
 
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -632,7 +640,6 @@ gcm_ghash_4bit:
 	xorq	%r13,%r9
 	shrq	$8,%r8
 	movzbq	%r12b,%r12
-	movl	-4(%rdi),%edx
 	shrq	$8,%r9
 	xorq	-128(%rbp,%rbx,8),%r8
 	shlq	$56,%r10
@@ -679,6 +686,7 @@ gcm_ghash_4bit:
 .def	gcm_init_clmul;	.scl 2;	.type 32;	.endef
 .p2align	4
 gcm_init_clmul:
+_CET_ENDBR
 	movdqu	(%rdx),%xmm2
 	pshufd	$78,%xmm2,%xmm2
 
@@ -744,6 +752,7 @@ gcm_init_clmul:
 .def	gcm_gmult_clmul;	.scl 2;	.type 32;	.endef
 .p2align	4
 gcm_gmult_clmul:
+_CET_ENDBR
 	movdqu	(%rcx),%xmm0
 	movdqa	.Lbswap_mask(%rip),%xmm5
 	movdqu	(%rdx),%xmm2
@@ -794,6 +803,7 @@ gcm_gmult_clmul:
 .def	gcm_ghash_clmul;	.scl 2;	.type 32;	.endef
 .p2align	4
 gcm_ghash_clmul:
+_CET_ENDBR
 .LSEH_begin_gcm_ghash_clmul:
 
 .byte	0x48,0x83,0xec,0x58		
@@ -1063,6 +1073,7 @@ gcm_ghash_clmul:
 .def	se_handler;	.scl 3;	.type 32;	.endef
 .p2align	4
 se_handler:
+_CET_ENDBR
 	pushq	%rsi
 	pushq	%rdi
 	pushq	%rbx

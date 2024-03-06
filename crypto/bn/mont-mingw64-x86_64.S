@@ -1,3 +1,9 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text	
 
@@ -16,6 +22,7 @@ bn_mul_mont:
 	movq	40(%rsp),%r8
 	movq	48(%rsp),%r9
 
+_CET_ENDBR
 	testl	$3,%r9d
 	jnz	.Lmul_enter
 	cmpl	$8,%r9d
@@ -236,6 +243,7 @@ bn_mul4x_mont:
 	movq	48(%rsp),%r9
 
 .Lmul4x_enter:
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -647,6 +655,7 @@ bn_sqr4x_mont:
 	movq	48(%rsp),%r9
 
 .Lsqr4x_enter:
+_CET_ENDBR
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -1410,5 +1419,3 @@ bn_sqr4x_mont:
 	movq	16(%rsp),%rsi
 	retq
 .LSEH_end_bn_sqr4x_mont:
-.byte	77,111,110,116,103,111,109,101,114,121,32,77,117,108,116,105,112,108,105,99,97,116,105,111,110,32,102,111,114,32,120,56,54,95,54,52,44,32,67,82,89,80,84,79,71,65,77,83,32,98,121,32,60,97,112,112,114,111,64,111,112,101,110,115,115,108,46,111,114,103,62,0
-.p2align	4

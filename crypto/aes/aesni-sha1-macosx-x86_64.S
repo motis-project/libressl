@@ -1,3 +1,9 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text	
 
@@ -7,6 +13,7 @@
 
 .p2align	4
 _aesni_cbc_sha1_enc:
+_CET_ENDBR
 
 	movl	_OPENSSL_ia32cap_P+0(%rip),%r10d
 	movl	_OPENSSL_ia32cap_P+4(%rip),%r11d
@@ -16,6 +23,7 @@ _aesni_cbc_sha1_enc:
 
 .p2align	4
 aesni_cbc_sha1_enc_ssse3:
+_CET_ENDBR
 	movq	8(%rsp),%r10
 
 

@@ -1,4 +1,4 @@
-/* $OpenBSD: s_client.c,v 1.60 2023/03/06 14:32:06 tb Exp $ */
+/* $OpenBSD: s_client.c,v 1.64 2023/12/29 12:15:49 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -223,7 +223,6 @@ static struct {
 	char *npn_in;
 	unsigned int off;
 	char *passarg;
-	int pause;
 	int peekaboo;
 	char *port;
 	int prexit;
@@ -296,18 +295,6 @@ s_client_opt_protocol_version_dtls(void)
 }
 #endif
 
-#ifndef OPENSSL_NO_DTLS1
-static int
-s_client_opt_protocol_version_dtls1(void)
-{
-	cfg.meth = DTLS_client_method();
-	cfg.min_version = DTLS1_VERSION;
-	cfg.max_version = DTLS1_VERSION;
-	cfg.socket_type = SOCK_DGRAM;
-	return (0);
-}
-#endif
-
 #ifndef OPENSSL_NO_DTLS1_2
 static int
 s_client_opt_protocol_version_dtls1_2(void)
@@ -319,22 +306,6 @@ s_client_opt_protocol_version_dtls1_2(void)
 	return (0);
 }
 #endif
-
-static int
-s_client_opt_protocol_version_tls1(void)
-{
-	cfg.min_version = TLS1_VERSION;
-	cfg.max_version = TLS1_VERSION;
-	return (0);
-}
-
-static int
-s_client_opt_protocol_version_tls1_1(void)
-{
-	cfg.min_version = TLS1_1_VERSION;
-	cfg.max_version = TLS1_1_VERSION;
-	return (0);
-}
 
 static int
 s_client_opt_protocol_version_tls1_2(void)
@@ -505,14 +476,6 @@ static const struct option s_client_options[] = {
 		.opt.func = s_client_opt_protocol_version_dtls,
 	},
 #endif
-#ifndef OPENSSL_NO_DTLS1
-	{
-		.name = "dtls1",
-		.desc = "Just use DTLSv1",
-		.type = OPTION_FUNC,
-		.opt.func = s_client_opt_protocol_version_dtls1,
-	},
-#endif
 #ifndef OPENSSL_NO_DTLS1_2
 	{
 		.name = "dtls1_2",
@@ -661,17 +624,11 @@ static const struct option s_client_options[] = {
 	},
 	{
 		.name = "no_tls1",
-		.desc = "Disable the use of TLSv1",
-		.type = OPTION_VALUE_OR,
-		.opt.value = &cfg.off,
-		.value = SSL_OP_NO_TLSv1,
+		.type = OPTION_DISCARD,
 	},
 	{
 		.name = "no_tls1_1",
-		.desc = "Disable the use of TLSv1.1",
-		.type = OPTION_VALUE_OR,
-		.opt.value = &cfg.off,
-		.value = SSL_OP_NO_TLSv1_1,
+		.type = OPTION_DISCARD,
 	},
 	{
 		.name = "no_tls1_2",
@@ -701,9 +658,7 @@ static const struct option s_client_options[] = {
 	},
 	{
 		.name = "pause",
-		.desc = "Pause 1 second between each read and write call",
-		.type = OPTION_FLAG,
-		.opt.flag = &cfg.pause,
+		.type = OPTION_DISCARD,
 	},
 	{
 		.name = "peekaboo",
@@ -806,18 +761,6 @@ static const struct option s_client_options[] = {
 	},
 #endif
 	{
-		.name = "tls1",
-		.desc = "Just use TLSv1",
-		.type = OPTION_FUNC,
-		.opt.func = s_client_opt_protocol_version_tls1,
-	},
-	{
-		.name = "tls1_1",
-		.desc = "Just use TLSv1.1",
-		.type = OPTION_FUNC,
-		.opt.func = s_client_opt_protocol_version_tls1_1,
-	},
-	{
 		.name = "tls1_2",
 		.desc = "Just use TLSv1.2",
 		.type = OPTION_FUNC,
@@ -880,17 +823,17 @@ sc_usage(void)
 	    "[-4 | -6] [-alpn protocols] [-bugs] [-CAfile file]\n"
 	    "    [-CApath directory] [-cert file] [-certform der | pem] [-check_ss_sig]\n"
 	    "    [-cipher cipherlist] [-connect host[:port]] [-crl_check]\n"
-	    "    [-crl_check_all] [-crlf] [-debug] [-dtls] [-dtls1] [-dtls1_2] [-extended_crl]\n"
+	    "    [-crl_check_all] [-crlf] [-debug] [-dtls] [-dtls1_2] [-extended_crl]\n"
 	    "    [-groups list] [-host host] [-ign_eof] [-ignore_critical]\n"
 	    "    [-issuer_checks] [-key keyfile] [-keyform der | pem]\n"
 	    "    [-keymatexport label] [-keymatexportlen len] [-legacy_server_connect]\n"
 	    "    [-msg] [-mtu mtu] [-nbio] [-nbio_test] [-no_comp] [-no_ign_eof]\n"
-	    "    [-no_legacy_server_connect] [-no_ticket] [-no_tls1] [-no_tls1_1]\n"
-	    "    [-no_tls1_2] [-no_tls1_3] [-pass arg] [-pause] [-policy_check]\n"
+	    "    [-no_legacy_server_connect] [-no_ticket] \n"
+	    "    [-no_tls1_2] [-no_tls1_3] [-pass arg] [-policy_check]\n"
 	    "    [-port port] [-prexit] [-proxy host:port] [-quiet] [-reconnect]\n"
 	    "    [-servername name] [-serverpref] [-sess_in file] [-sess_out file]\n"
 	    "    [-showcerts] [-starttls protocol] [-state] [-status] [-timeout]\n"
-	    "    [-tls1] [-tls1_1] [-tls1_2] [-tls1_3] [-tlsextdebug]\n"
+	    "    [-tls1_2] [-tls1_3] [-tlsextdebug]\n"
 	    "    [-use_srtp profiles] [-verify depth] [-verify_return_error]\n"
 	    "    [-x509_strict] [-xmpphost host]\n");
 	fprintf(stderr, "\n");
@@ -1142,8 +1085,6 @@ s_client_main(int argc, char **argv)
 			goto end;
 		}
 	}
-	if (cfg.pause & 0x01)
-		SSL_set_debug(con, 1);
 
 	if (SSL_is_dtls(con)) {
 		sbio = BIO_new_dgram(s, BIO_NOCLOSE);
@@ -1184,7 +1125,6 @@ s_client_main(int argc, char **argv)
 		sbio = BIO_push(test, sbio);
 	}
 	if (cfg.debug) {
-		SSL_set_debug(con, 1);
 		BIO_set_callback(sbio, bio_dump_callback);
 		BIO_set_callback_arg(sbio, (char *) bio_c_out);
 	}

@@ -22,7 +22,7 @@ case $host_os in
 		# Don't use arc4random on systems before 10.12 because of
 		# weak seed on failure to open /dev/random, based on latest
 		# public source:
-		# http://www.opensource.apple.com/source/Libc/Libc-997.90.3/gen/FreeBSD/arc4random.c
+		# https://www.opensource.apple.com/source/Libc/Libc-997.90.3/gen/FreeBSD/arc4random.c
 		#
 		# We use the presence of getentropy() to detect 10.12. The
 		# following check take into account that:
@@ -61,9 +61,15 @@ char buf[1]; getentropy(buf, 1);
 	*freebsd*)
 		HOST_OS=freebsd
 		HOST_ABI=elf
-		# fork detection missing, weak seed on failure
-		# https://svnweb.freebsd.org/base/head/lib/libc/gen/arc4random.c?revision=268642&view=markup
-		USE_BUILTIN_ARC4RANDOM=yes
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/param.h>
+#if __FreeBSD_version < 1200000
+        undefined
+#endif
+                       ]], [[]])],
+                       [ USE_BUILTIN_ARC4RANDOM=no ],
+                       [ USE_BUILTIN_ARC4RANDOM=yes ]
+		)
 		AC_SUBST([PROG_LDADD], ['-lthr'])
 		;;
 	*hpux*)

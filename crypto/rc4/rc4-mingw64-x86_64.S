@@ -1,3 +1,9 @@
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
 #include "x86_arch.h"
 .text	
 
@@ -15,6 +21,8 @@ RC4:
 	movq	%rdx,%rsi
 	movq	%r8,%rdx
 	movq	%r9,%rcx
+
+_CET_ENDBR
 	orq	%rsi,%rsi
 	jne	.Lentry
 	movq	8(%rsp),%rdi
@@ -544,6 +552,7 @@ RC4_set_key:
 	movq	%rdx,%rsi
 	movq	%r8,%rdx
 
+_CET_ENDBR
 	leaq	8(%rdi),%rdi
 	leaq	(%rdx,%rsi,1),%rdx
 	negq	%rsi
@@ -613,29 +622,3 @@ RC4_set_key:
 	movq	16(%rsp),%rsi
 	retq
 .LSEH_end_RC4_set_key:
-
-.globl	RC4_options
-.def	RC4_options;	.scl 2;	.type 32;	.endef
-.p2align	4
-RC4_options:
-	leaq	.Lopts(%rip),%rax
-	movl	OPENSSL_ia32cap_P(%rip),%edx
-	btl	$IA32CAP_BIT0_INTELP4,%edx
-	jc	.L8xchar
-	btl	$IA32CAP_BIT0_INTEL,%edx
-	jnc	.Ldone
-	addq	$25,%rax
-	retq
-.L8xchar:
-	addq	$12,%rax
-.Ldone:
-	retq
-.section	.rodata
-.p2align	6
-.Lopts:
-.byte	114,99,52,40,56,120,44,105,110,116,41,0
-.byte	114,99,52,40,56,120,44,99,104,97,114,41,0
-.byte	114,99,52,40,49,54,120,44,105,110,116,41,0
-.p2align	6
-.text	
-
