@@ -12,10 +12,27 @@ if [ ! -d openbsd ]; then
 		git clone $LIBRESSL_GIT/openbsd
 	fi
 fi
-(cd openbsd
- git fetch
- git checkout $openbsd_branch
- git pull --rebase)
+
+# pull either the latest or if on a tag, the matching tag
+set +e
+tag=`git describe --exact-match --tags HEAD 2>/dev/null`
+is_tag=$?
+# adjust for 9 hour time delta between trees
+release_ts=$((`git show -s --format=%ct $tag|tail -1` + 32400))
+commit=`git -C openbsd rev-list -n 1 --before=$release_ts $openbsd_branch`
+git -C openbsd fetch
+if [ $is_tag -eq 0 ]; then
+  echo "This is tag $tag, trying OpenBSD tag libressl-$tag"
+  if ! git -C openbsd checkout "libressl-$tag"; then
+    echo "No matching OpenBSD tag found trying nearest commit $commit"
+    git -C openbsd checkout -q $commit
+  fi
+else
+  echo "Not on a tag, grabbing latest (NOTE: this may be broken from time to time)"
+  git -C openbsd checkout $openbsd_branch
+  git -C openbsd pull
+fi
+set -e
 
 # setup source paths
 CWD=`pwd`
@@ -112,17 +129,17 @@ copy_hdrs() {
 
 copy_hdrs $libcrypto_src "stack/stack.h lhash/lhash.h stack/safestack.h
 	ossl_typ.h err/err.h crypto.h comp/comp.h x509/x509.h buffer/buffer.h
-	objects/objects.h asn1/asn1.h bn/bn.h ec/ec.h ecdsa/ecdsa.h
+	objects/objects.h asn1/asn1.h asn1/posix_time.h bn/bn.h ec/ec.h ecdsa/ecdsa.h
 	ecdh/ecdh.h rsa/rsa.h sha/sha.h x509/x509_vfy.h pkcs7/pkcs7.h pem/pem.h
 	pem/pem2.h hkdf/hkdf.h hmac/hmac.h rand/rand.h md5/md5.h
 	x509/x509v3.h conf/conf.h ocsp/ocsp.h
-	aes/aes.h modes/modes.h asn1/asn1t.h dso/dso.h bf/blowfish.h
+	aes/aes.h modes/modes.h asn1/asn1t.h bf/blowfish.h
 	bio/bio.h cast/cast.h cmac/cmac.h cms/cms.h conf/conf_api.h des/des.h dh/dh.h
 	dsa/dsa.h engine/engine.h ui/ui.h pkcs12/pkcs12.h ts/ts.h
 	md4/md4.h ripemd/ripemd.h whrlpool/whrlpool.h idea/idea.h
 	rc2/rc2.h rc4/rc4.h ui/ui_compat.h txt_db/txt_db.h
 	sm3/sm3.h sm4/sm4.h chacha/chacha.h evp/evp.h poly1305/poly1305.h
-	camellia/camellia.h gost/gost.h curve25519/curve25519.h
+	camellia/camellia.h curve25519/curve25519.h
 	ct/ct.h kdf/kdf.h"
 
 copy_hdrs $libssl_src "srtp.h ssl.h ssl2.h ssl3.h ssl23.h tls1.h dtls1.h"
@@ -169,7 +186,7 @@ $CP crypto/compat/ui_openssl_win.c crypto/ui
 $GREP -v OPENSSL_ia32cap_P $libcrypto_src/Symbols.list | $GREP '^[A-Za-z0-9_]' > crypto/crypto.sym
 
 fixup_masm() {
-	cpp -I./crypto $1     \
+	cpp -I./crypto -I./include/compat -D_MSC_VER $1 \
 		| sed -e 's/^#/;/'    \
 		| sed -e 's/|/OR/g'   \
 		| sed -e 's/~/NOT/g'  \
@@ -179,6 +196,7 @@ fixup_masm() {
 
 # generate assembly crypto algorithms
 asm_src=$libcrypto_src
+
 gen_asm_stdout() {
 	CC=true perl $asm_src/$2 $1 > crypto/$3.tmp
 	[ $1 = "elf" ] && cat <<-EOF >> crypto/$3.tmp
@@ -192,6 +210,7 @@ gen_asm_stdout() {
 		$MV crypto/$3.tmp crypto/$3
 	fi
 }
+
 gen_asm_mips() {
 	abi=$1
 	dir=$2
@@ -205,6 +224,7 @@ gen_asm_mips() {
 	EOF
 	mv $dst.S crypto/$dir/$dst.S
 }
+
 gen_asm() {
 	CC=true perl $asm_src/$2 $1 crypto/$3.tmp
 	[ $1 = "elf" ] && cat <<-EOF >> crypto/$3.tmp
@@ -237,7 +257,6 @@ gen_asm_mips 64 sha sha512-mips sha512-mips64
 
 echo generating arm ASM source for elf
 gen_asm_stdout elf aes/asm/aes-armv4.pl        aes/aes-elf-armv4.S
-gen_asm_stdout elf bn/asm/armv4-gf2m.pl        bn/gf2m-elf-armv4.S
 gen_asm_stdout elf bn/asm/armv4-mont.pl        bn/mont-elf-armv4.S
 gen_asm_stdout elf sha/asm/sha1-armv4-large.pl sha/sha1-elf-armv4.S
 gen_asm_stdout elf sha/asm/sha256-armv4.pl     sha/sha256-elf-armv4.S
@@ -249,6 +268,7 @@ $CP $libcrypto_src/arch/arm/arm_arch.h crypto
 
 for abi in elf macosx masm mingw64; do
 	echo generating x86_64 ASM source for $abi
+
 	gen_asm_stdout $abi aes/asm/aes-x86_64.pl        aes/aes-$abi-x86_64.S
 	gen_asm_stdout $abi aes/asm/vpaes-x86_64.pl      aes/vpaes-$abi-x86_64.S
 	gen_asm_stdout $abi aes/asm/bsaes-x86_64.pl      aes/bsaes-$abi-x86_64.S
@@ -257,7 +277,6 @@ for abi in elf macosx masm mingw64; do
 	gen_asm_stdout $abi bn/asm/modexp512-x86_64.pl   bn/modexp512-$abi-x86_64.S
 	gen_asm_stdout $abi bn/asm/x86_64-mont.pl        bn/mont-$abi-x86_64.S
 	gen_asm_stdout $abi bn/asm/x86_64-mont5.pl       bn/mont5-$abi-x86_64.S
-	gen_asm_stdout $abi bn/asm/x86_64-gf2m.pl        bn/gf2m-$abi-x86_64.S
 	gen_asm_stdout $abi camellia/asm/cmll-x86_64.pl  camellia/cmll-$abi-x86_64.S
 	gen_asm_stdout $abi md5/asm/md5-x86_64.pl        md5/md5-$abi-x86_64.S
 	gen_asm_stdout $abi modes/asm/ghash-x86_64.pl    modes/ghash-$abi-x86_64.S
@@ -336,6 +355,9 @@ for i in `find $libcrypto_regress -name '*.c'`; do
 done
 $CP $libcrypto_regress/evp/evptests.txt tests
 $CP $libcrypto_regress/aead/*.txt tests
+$CP $libcrypto_regress/ct/ctlog.conf tests
+$CP $libcrypto_regress/ct/*.crt tests
+$CP $libcrypto_regress/x509/policy/*.pem tests
 
 # generate libcrypto freenull.c
 awk -f $libcrypto_regress/free/freenull.awk \

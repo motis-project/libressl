@@ -8,7 +8,6 @@ set(
 	pqueue.c
 	s3_cbc.c
 	s3_lib.c
-	ssl_algs.c
 	ssl_asn1.c
 	ssl_both.c
 	ssl_cert.c
@@ -69,7 +68,8 @@ target_include_directories(ssl_obj
 		../crypto/bio
 		../include/compat
 	PUBLIC
-		../include)
+		../include
+		${CMAKE_BINARY_DIR}/include)
 
 add_library(bs_obj OBJECT ${BS_SRC})
 target_include_directories(bs_obj
@@ -78,7 +78,7 @@ target_include_directories(bs_obj
 		../include/compat)
 
 if(BUILD_SHARED_LIBS)
-	add_library(ssl $<TARGET_OBJECTS:ssl_obj> $<TARGET_OBJECTS:bs_obj>)
+	add_library(ssl $<TARGET_OBJECTS:ssl_obj> $<TARGET_OBJECTS:compat_obj> $<TARGET_OBJECTS:bs_obj>)
 else()
 	add_library(ssl $<TARGET_OBJECTS:ssl_obj> empty.c)
 endif()
@@ -88,13 +88,33 @@ target_include_directories(ssl SYSTEM PUBLIC ../include)
 export_symbol(ssl ${CMAKE_CURRENT_SOURCE_DIR}/ssl.sym)
 target_link_libraries(ssl crypto ${PLATFORM_LIBS})
 if (WIN32)
-	set(SSL_POSTFIX -${SSL_MAJOR_VERSION})
+	set(SSL_POSTFIX -${SSL_MAJOR_VERSION} PARENT_SCOPE)
 endif()
 set_target_properties(ssl PROPERTIES
 	OUTPUT_NAME ssl${SSL_POSTFIX}
-	ARCHIVE_OUTPUT_NAME ssl${SSL_POSTFIX})
-set_target_properties(ssl PROPERTIES VERSION ${SSL_VERSION}
-	SOVERSION ${SSL_MAJOR_VERSION})
+	ARCHIVE_OUTPUT_NAME ssl${SSL_POSTFIX}
+	EXPORT_NAME SSL
+	VERSION ${SSL_VERSION}
+	SOVERSION ${SSL_MAJOR_VERSION}
+)
+
+target_include_directories(
+	ssl
+	PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
+	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+install(
+	TARGETS ssl
+	EXPORT SSL-target
+)
+
+export(
+	EXPORT SSL-target
+	FILE "${LibreSSL_BINARY_DIR}/LibreSSL-SSL.cmake"
+	NAMESPACE LibreSSL::
+)
 
 if(ENABLE_LIBRESSL_INSTALL)
 	install(
@@ -102,6 +122,12 @@ if(ENABLE_LIBRESSL_INSTALL)
 		ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 		LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 		RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	)
+	install(
+		EXPORT SSL-target
+		FILE "LibreSSL-SSL.cmake"
+		NAMESPACE LibreSSL::
+		DESTINATION "${LIBRESSL_INSTALL_CMAKEDIR}"
 	)
 endif(ENABLE_LIBRESSL_INSTALL)
 
