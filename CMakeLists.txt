@@ -63,7 +63,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # Enable asserts regardless of build type
-add_definitions(-UNDEBUG)
+#add_definitions(-UNDEBUG)
 
 set(BUILD_NC true)
 
