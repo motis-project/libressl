@@ -968,3 +968,4 @@ if(BUILD_SHARED_LIBS)
 	target_link_libraries(crypto-static ${PLATFORM_LIBS})
 endif()
 
+add_library(OpenSSL::Crypto ALIAS crypto)

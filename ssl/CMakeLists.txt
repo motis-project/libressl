@@ -135,3 +135,4 @@ if(BUILD_SHARED_LIBS)
 	target_link_libraries(ssl-static crypto-static ${PLATFORM_LIBS})
 endif()
 
+add_library(OpenSSL::SSL ALIAS ssl)
