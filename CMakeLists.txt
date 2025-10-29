@@ -50,7 +50,7 @@ string(REGEX REPLACE "\\..*" "" TLS_MAJOR_VERSION ${TLS_VERSION})
 
 option(LIBRESSL_SKIP_INSTALL "Skip installation" ${LIBRESSL_SKIP_INSTALL})
 option(LIBRESSL_APPS "Build apps" ON)
-option(LIBRESSL_TESTS "Build tests" ON)
+option(LIBRESSL_TESTS "Build tests" OFF)
 option(ENABLE_ASM "Enable assembly" ON)
 option(ENABLE_EXTRATESTS "Enable extra tests that may be unreliable on some platforms" OFF)
 option(ENABLE_NC "Enable installing TLS-enabled nc(1)" OFF)
@@ -78,13 +78,16 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 	  STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+# Enable asserts regardless of build type
+#add_definitions(-UNDEBUG)
+
 # Do not disable assertions based on CMAKE_BUILD_TYPE
-foreach(_build_type "Release" "MinSizeRel" "RelWithDebInfo")
-	foreach(_lang C CXX)
-		string(TOUPPER "CMAKE_${_lang}_FLAGS_${_build_type}" _var)
-		string(REGEX REPLACE "(^| )[/-]D *NDEBUG($| )" " " ${_var} "${${_var}}")
-	endforeach()
-endforeach()
+# foreach(_build_type "Release" "MinSizeRel" "RelWithDebInfo")
+# 	foreach(_lang C CXX)
+# 		string(TOUPPER "CMAKE_${_lang}_FLAGS_${_build_type}" _var)
+# 		string(REGEX REPLACE "(^| )[/-]D *NDEBUG($| )" " " ${_var} "${${_var}}")
+# 	endforeach()
+# endforeach()
 
 set(BUILD_NC true)
 

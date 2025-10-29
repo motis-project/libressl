@@ -1,0 +1,149 @@
+OPTION	DOTNAME
+#if defined(__CET__)
+#include <cet.h>
+#else
+#define _CET_ENDBR
+#endif
+
+#include "x86_arch.h"
+EXTERN	OPENSSL_cpuid_setup:NEAR
+
+.CRT$XCU	SEGMENT READONLY ALIGN(8)
+_CET_ENDBR
+		DQ	OPENSSL_cpuid_setup
+
+EXTERN	OPENSSL_ia32cap_P:NEAR
+
+
+.CRT$XCU	ENDS
+.text$	SEGMENT ALIGN(64) 'CODE'
+
+PUBLIC	OPENSSL_ia32_cpuid
+
+ALIGN	16
+OPENSSL_ia32_cpuid	PROC PUBLIC
+_CET_ENDBR
+	mov	r8,rbx
+
+	xor	eax,eax
+	cpuid
+	mov	r11d,eax
+
+	xor	eax,eax
+	cmp	ebx,0756e6547h
+	setne	al
+	mov	r9d,eax
+	cmp	edx,049656e69h
+	setne	al
+	or	r9d,eax
+	cmp	ecx,06c65746eh
+	setne	al
+	or	r9d,eax
+	jz	$L$intel
+
+	cmp	ebx,068747541h
+	setne	al
+	mov	r10d,eax
+	cmp	edx,069746E65h
+	setne	al
+	or	r10d,eax
+	cmp	ecx,0444D4163h
+	setne	al
+	or	r10d,eax
+	jnz	$L$intel
+
+
+	mov	eax,080000000h
+	cpuid
+	cmp	eax,080000001h
+	jb	$L$intel
+	mov	r10d,eax
+	mov	eax,080000001h
+	cpuid
+	or	r9d,ecx
+	and	r9d,IA32CAP_MASK1_AMD_XOP
+	or	r9d,1
+
+	cmp	r10d,080000008h
+	jb	$L$intel
+
+	mov	eax,080000008h
+	cpuid
+	movzx	r10,cl
+	inc	r10
+
+	mov	eax,1
+	cpuid
+	bt	edx,IA32CAP_BIT0_HT
+	jnc	$L$generic
+	shr	ebx,16
+	cmp	bl,r10b
+	ja	$L$generic
+	xor	edx,IA32CAP_MASK0_HT
+	jmp	$L$generic
+
+$L$intel::
+	cmp	r11d,4
+	mov	r10d,-1
+	jb	$L$nocacheinfo
+
+	mov	eax,4
+	mov	ecx,0
+	cpuid
+	mov	r10d,eax
+	shr	r10d,14
+	and	r10d,0fffh
+
+$L$nocacheinfo::
+	mov	eax,1
+	cpuid
+
+	and	edx,(~(IA32CAP_MASK0_INTELP4 | IA32CAP_MASK0_INTEL))
+	cmp	r9d,0
+	jne	$L$notintel
+
+	or	edx,IA32CAP_MASK0_INTEL
+	and	ah,15
+	cmp	ah,15
+	jne	$L$notintel
+
+	or	edx,IA32CAP_MASK0_INTELP4
+$L$notintel::
+	bt	edx,IA32CAP_BIT0_HT
+	jnc	$L$generic
+	xor	edx,IA32CAP_MASK0_HT
+	cmp	r10d,0
+	je	$L$generic
+
+	or	edx,IA32CAP_MASK0_HT
+	shr	ebx,16
+	cmp	bl,1
+	ja	$L$generic
+	xor	edx,IA32CAP_MASK0_HT
+
+$L$generic::
+	and	r9d,IA32CAP_MASK1_AMD_XOP
+	and	ecx,(~IA32CAP_MASK1_AMD_XOP)
+	or	r9d,ecx
+
+	mov	r10d,edx
+	bt	r9d,IA32CAP_BIT1_OSXSAVE
+	jnc	$L$clear_avx
+	xor	ecx,ecx
+DB	00fh,001h,0d0h		
+	and	eax,6
+	cmp	eax,6
+	je	$L$done
+$L$clear_avx::
+	mov	eax,(~(IA32CAP_MASK1_AVX | IA32CAP_MASK1_FMA3 | IA32CAP_MASK1_AMD_XOP))
+	and	r9d,eax
+$L$done::
+	shl	r9,32
+	mov	eax,r10d
+	mov	rbx,r8
+	or	rax,r9
+	DB	0F3h,0C3h		;repret
+OPENSSL_ia32_cpuid	ENDP
+
+.text$	ENDS
+END
